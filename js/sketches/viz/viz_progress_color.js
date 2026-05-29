@@ -73,6 +73,31 @@
                 p.rect(cx + 2, oy + padT + chartH - pH, barW, pH, 2);
             });
 
+            // trend lines 
+            var lineProgress = p.constrain((progress - 0.1) / 0.6, 0, 1);
+            var visibleCount = Math.floor(lineProgress * n);
+
+            // adoption trend line
+            p.noFill();
+            p.stroke(COLOR_ADOPT[0], COLOR_ADOPT[1], COLOR_ADOPT[2], 200);
+            p.strokeWeight(2.5);
+            p.beginShape();
+            for (var i = 0; i <= visibleCount && i < n; i++) {
+                p.curveVertex(toX(i), toY(ADOPT[i]));
+            }
+            p.endShape();
+
+            //purchase trend line
+            p.stroke(COLOR_PURCHASE[0], COLOR_PURCHASE[1], COLOR_PURCHASE[2], 200);
+            p.strokeWeight(2.5);
+            p.beginShape();
+            for (var i = 0; i <= visibleCount && i < n; i++) {
+                p.curveVertex(toX(i), toY(PURCHASE[i]));
+            }
+            p.endShape();
+
+            p.noStroke();
+
             // crossover annotation at 2019 (index 4)
             // 0.7 → 1.0  annotation fades in
             var annoAlpha = p.constrain((progress - 0.7) / 0.2, 0, 1);
