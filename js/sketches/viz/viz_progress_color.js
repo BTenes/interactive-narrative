@@ -113,8 +113,8 @@
                 p.fill(60, 60, 60, annoAlpha * 220);
                 p.textAlign(p.CENTER, p.BOTTOM);
                 p.textSize(12);
-                p.text('Adoptions overtook purchases', cx2019, toY(3.1));
-                p.text('in 2019', cx2019, toY(3.1) + 16);
+                p.text('Adoptions overtook purchases', cx2019, toY(4.8));
+                p.text('in 2019', cx2019, toY(4.8) + 16);
             }
 
             // legend
