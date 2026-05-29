@@ -1,305 +1,144 @@
-let table;
-let data = [];
+// sketch_grid.js
+// Responsible for rendering the main words grid and filler-related highlights
 
-let margin = { top: 70, right: 60, bottom: 90, left: 80 };
-let chartX, chartY, chartW, chartH;
+(function () {
+    window.TemplateRenderer = {
+        // setData: accept either an array of preloaded rows or a URL string
+        // If a URL (or no data) is provided, attempt to load via DataLoader.loadTSV
+        // then preprocess and compute layout. This keeps data-loading inside
+        // the renderer / data_loader and out of `sections`.
+        setData: function (manager, rawData) {
+            var self = this;
 
-function preload() {
-  table = loadTable("yearly_dog_intake_adoption_fixed.csv", "csv", "header");
-}
+            function computeLayout(data) {
+                data = window.DataLoader.preprocess(data || []);
+                manager.data = data;
 
-function setup() {
-  createCanvas(1000, 600);
+                // default grid params (grid-specific details live here)
+                manager.squareSize = manager.squareSize || 6;
+                manager.squarePad = manager.squarePad || 2;
+                manager.numPerRow = Math.floor((manager.width || 600) / (manager.squareSize + manager.squarePad));
+                manager.offsetX = (manager.margin && manager.margin.left) || 20;
+                manager.offsetY = (manager.margin && manager.margin.top) || 0;
 
-  chartX = margin.left;
-  chartY = margin.top;
-  chartW = width - margin.left - margin.right;
-  chartH = height - margin.top - margin.bottom;
+                // compute positions
+                data.forEach(function (d, i) {
+                    d.col = i % manager.numPerRow;
+                    d.x = manager.offsetX + d.col * (manager.squareSize + manager.squarePad);
+                    d.row = Math.floor(i / manager.numPerRow);
+                    d.y = manager.offsetY + d.row * (manager.squareSize + manager.squarePad);
+                });
 
-  for (let r = 0; r < table.getRowCount(); r++) {
-    let year = table.getNum(r, "Year");
+                manager._fillerIndices = data.reduce(function (acc, w, idx) { if (w.filler) acc.push(idx); return acc; }, []);
+                manager._totalFillers = manager._fillerIndices.length;
 
-    // 2013 和 2025 都不是完整年份
-    // 这里先保留 2014 到 2024
-    if (year >= 2014 && year <= 2024) {
-      data.push({
-        year: year,
-        intake: table.getNum(r, "Intakes"),
-        adoption: table.getNum(r, "Adoptions"),
-        gap: table.getNum(r, "Gap")
-      });
-    }
-  }
+                // expose for quick dev inspection
+                try { if (window.__sketchAPI) window.__sketchAPI.data = manager.data; } catch (e) { }
+            }
 
-  textFont("Arial");
-}
+            // If rawData is a string, treat it as a URL to fetch
+            if (typeof rawData === 'string' && rawData.length > 0) {
+                if (!window.DataLoader || typeof window.DataLoader.loadTSV !== 'function') {
+                    return Promise.reject(new Error('DataLoader.loadTSV required to load data from URL. Ensure js/helpers/data_loader.js is loaded.'));
+                }
+                return window.DataLoader.loadTSV(rawData).then(function (rows) {
+                    computeLayout(rows);
+                    return manager.data;
+                }).catch(function (err) {
+                    console.error('Template Renderer: failed to load data from', rawData, err);
+                    computeLayout([]);
+                    return manager.data;
+                });
+            }
 
-function draw() {
-  background(250);
+            // If no rawData provided, attempt to load from config or default path
+            if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
+                var cfgUrl = (window.ScrollDemoConfig && window.ScrollDemoConfig.dataUrl) ? window.ScrollDemoConfig.dataUrl : null;
+                var defaultUrl = cfgUrl || 'data/words.tsv';
+                if (window.DataLoader && typeof window.DataLoader.loadTSV === 'function') {
+                    return window.DataLoader.loadTSV(defaultUrl).then(function (rows) {
+                        computeLayout(rows);
+                        return manager.data;
+                    }).catch(function (err) {
+                        console.error('Template Renderer: failed to load default data from', defaultUrl, err);
+                        computeLayout([]);
+                        return manager.data;
+                    });
+                }
+            }
 
-  drawTitle();
-  drawAxes();
-  drawGapArea();
-  drawLine("intake");
-  drawLine("adoption");
-  drawLegend();
-  drawHover();
-}
+            // Otherwise assume rawData is an array-like structure and compute synchronously
+            computeLayout(rawData || []);
+            return Promise.resolve(manager.data);
+        },
 
-function drawTitle() {
-  noStroke();
-  fill(35);
-  textAlign(LEFT, CENTER);
-  textSize(24);
-  text("Dog Intake and Adoption by Year", margin.left, 32);
+        draw: function (p, manager, ai, progress) {
+            try { console.log('Template Renderer: drawing title, ai=', ai); } catch (e) { }
 
-  fill(110);
-  textSize(14);
-  text("Austin Animal Center, dogs only", margin.left, 55);
-}
+            // Handle title screens for early steps (keep titles in same sketch file)
+            if (ai === 0 || ai === 1) {
+                // draw a subtle background so it's obvious where the title is rendered
+                var cx = manager.offsetX + manager.width / 2;
+                var cy = manager.height / 3;
+                p.push();
+                p.noStroke();
+                p.fill(255, 255, 160, 140);
+                var w = 420;
+                var h = 120;
+                p.rect(cx - w / 2, cy - h / 2, w, h, 6);
 
-function drawAxes() {
-  let maxY = getMaxValue();
+                p.fill(0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(48);
+                p.text(ai === 0 ? '2013' : 'Filler Words', cx, cy);
+                p.pop();
+                return;
+            }
 
-  // grid lines and y labels
-  for (let i = 0; i <= 5; i++) {
-    let value = (maxY / 5) * i;
-    let y = valueToY(value);
+            // Draw grid base squares in a single pass (light gray)
+            p.fill(220);
+            for (var i = 0, n = manager.data.length; i < n; i++) {
+                var d = manager.data[i];
+                p.rect(d.x, d.y, manager.squareSize, manager.squareSize);
+            }
 
-    stroke(230);
-    strokeWeight(1);
-    line(chartX, y, chartX + chartW, y);
+            // Highlight filler squares using cached indices (faster loop)
+            if (ai >= 3) {
+                p.fill(0, 150, 140);
+                for (var fi = 0; fi < manager._fillerIndices.length; fi++) {
+                    var idx = manager._fillerIndices[fi];
+                    var wd = manager.data[idx];
+                    p.rect(wd.x, wd.y, manager.squareSize, manager.squareSize);
+                }
+            }
 
-    noStroke();
-    fill(120);
-    textSize(12);
-    textAlign(RIGHT, CENTER);
-    text(round(value), chartX - 12, y);
-  }
+            // Show aggregated count
+            if (ai >= 4) {
+                var totalFillers = manager._totalFillers || 0;
+                p.fill(0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(40);
+                var cx = manager.offsetX + manager.width / 2;
+                var cy = manager.offsetY + manager.height / 3;
+                p.text(totalFillers, cx, cy);
+                p.textSize(16);
+                p.text('Filler Words', cx, cy + 40);
+            }
 
-  // axis lines
-  stroke(170);
-  strokeWeight(1);
-  line(chartX, chartY, chartX, chartY + chartH);
-  line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
-
-  // x-axis labels
-  noStroke();
-  fill(100);
-  textSize(13);
-  textAlign(CENTER, TOP);
-
-  for (let i = 0; i < data.length; i++) {
-    let x = indexToX(i);
-    text(data[i].year, x, chartY + chartH + 15);
-  }
-
-  // y-axis label
-  push();
-  translate(25, height / 2);
-  rotate(-HALF_PI);
-  fill(90);
-  textSize(14);
-  textAlign(CENTER, CENTER);
-  text("Number of Dogs", 0, 0);
-  pop();
-}
-
-function drawGapArea() {
-  noStroke();
-  fill(80, 140, 220, 35);
-
-  beginShape();
-
-  // top line: intake
-  for (let i = 0; i < data.length; i++) {
-    let x = indexToX(i);
-    let y = valueToY(data[i].intake);
-    vertex(x, y);
-  }
-
-  // bottom line: adoption
-  for (let i = data.length - 1; i >= 0; i--) {
-    let x = indexToX(i);
-    let y = valueToY(data[i].adoption);
-    vertex(x, y);
-  }
-
-  endShape(CLOSE);
-}
-
-function drawLine(type) {
-  noFill();
-
-  if (type === "intake") {
-    stroke(70, 130, 220);
-    strokeWeight(3);
-    drawingContext.setLineDash([]);
-  }
-
-  if (type === "adoption") {
-    stroke(80, 165, 120);
-    strokeWeight(3);
-    drawingContext.setLineDash([10, 7]);
-  }
-
-  beginShape();
-  for (let i = 0; i < data.length; i++) {
-    let x = indexToX(i);
-    let y = valueToY(data[i][type]);
-    vertex(x, y);
-  }
-  endShape();
-
-  drawingContext.setLineDash([]);
-
-  // points
-  for (let i = 0; i < data.length; i++) {
-    let x = indexToX(i);
-    let y = valueToY(data[i][type]);
-
-    fill(250);
-    if (type === "intake") {
-      stroke(70, 130, 220);
-    } else {
-      stroke(80, 165, 120);
-    }
-    strokeWeight(2);
-    circle(x, y, 9);
-  }
-}
-
-function drawLegend() {
-  let lx = margin.left;
-  let ly = height - 30;
-
-  textSize(14);
-  textAlign(LEFT, CENTER);
-
-  // intake
-  stroke(70, 130, 220);
-  strokeWeight(3);
-  line(lx, ly, lx + 40, ly);
-  noStroke();
-  fill(60);
-  text("intake", lx + 50, ly);
-
-  // adoption
-  stroke(80, 165, 120);
-  strokeWeight(3);
-  drawingContext.setLineDash([10, 7]);
-  line(lx + 130, ly, lx + 170, ly);
-  drawingContext.setLineDash([]);
-  noStroke();
-  fill(60);
-  text("adoption", lx + 180, ly);
-
-  // gap
-  fill(80, 140, 220, 35);
-  rect(lx + 310, ly - 8, 24, 16);
-  fill(60);
-  text("gap = intake - adoption", lx + 345, ly);
-}
-
-function drawHover() {
-  if (
-    mouseX < chartX ||
-    mouseX > chartX + chartW ||
-    mouseY < chartY ||
-    mouseY > chartY + chartH
-  ) {
-    return;
-  }
-
-  let idx = getClosestIndex(mouseX);
-  let d = data[idx];
-
-  let x = indexToX(idx);
-  let intakeY = valueToY(d.intake);
-  let adoptionY = valueToY(d.adoption);
-
-  // vertical guide line
-  stroke(190);
-  strokeWeight(1);
-  line(x, chartY, x, chartY + chartH);
-
-  // highlight points
-  noStroke();
-  fill(70, 130, 220);
-  circle(x, intakeY, 14);
-
-  fill(80, 165, 120);
-  circle(x, adoptionY, 14);
-
-  // tooltip box
-  let boxW = 190;
-  let boxH = 120;
-  let tx = x + 18;
-  let ty = min(intakeY, adoptionY) - 30;
-
-  if (tx + boxW > width - 15) {
-    tx = x - boxW - 18;
-  }
-
-  if (ty < 15) {
-    ty = 15;
-  }
-
-  fill(255);
-  stroke(210);
-  strokeWeight(1);
-  rect(tx, ty, boxW, boxH, 12);
-
-  noStroke();
-  textAlign(LEFT, TOP);
-
-  fill(35);
-  textSize(17);
-  text(d.year, tx + 16, ty + 14);
-
-  fill(70, 130, 220);
-  textSize(15);
-  text("Intake: " + d.intake, tx + 16, ty + 48);
-
-  fill(80, 165, 120);
-  text("Adoption: " + d.adoption, tx + 16, ty + 73);
-
-  fill(60);
-  text("Gap: " + d.gap, tx + 16, ty + 98);
-}
-
-function getClosestIndex(mx) {
-  let closest = 0;
-  let minDist = Infinity;
-
-  for (let i = 0; i < data.length; i++) {
-    let x = indexToX(i);
-    let d = abs(mx - x);
-
-    if (d < minDist) {
-      minDist = d;
-      closest = i;
-    }
-  }
-
-
-  return closest;
-}
-
-function indexToX(i) {
-  return map(i, 0, data.length - 1, chartX, chartX + chartW);
-}
-
-function valueToY(value) {
-  return map(value, 0, getMaxValue(), chartY + chartH, chartY);
-}
-
-function getMaxValue() {
-  let maxVal = 0;
-
-  for (let d of data) {
-    maxVal = max(maxVal, d.intake, d.adoption);
-  }
-
-  return ceil(maxVal / 1000) * 1000;
-}
+            // Cough coloring via progress
+            if (ai === 7) {
+                var t = Math.max(0, Math.min(1, progress));
+                for (var k = 0; k < manager.data.length; k++) {
+                    var wd = manager.data[k];
+                    if (wd.filler && wd.min >= 14) {
+                        var r = Math.floor(0 + (255 - 0) * t);
+                        var g = Math.floor(128 - (128 * t));
+                        var b = Math.floor(120 - (120 * t));
+                        p.fill(r, g, b);
+                        p.rect(wd.x, wd.y, manager.squareSize, manager.squareSize);
+                    }
+                }
+            }
+        }
+    };
+})();

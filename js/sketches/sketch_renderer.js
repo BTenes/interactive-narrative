@@ -1,6 +1,5 @@
 // sketch_renderer.js
 
-// Responsible for rendering the main visualization based on the current active index
 (function () {
     window.Renderer = {
 
@@ -10,8 +9,10 @@
 
             manager.dogData = [];
             manager.outcomeData = [];
+            manager.heatmapData = [];
+            manager.breedData = [];
 
-            // Load both CSV files
+            // 1. Load intake vs adoption timeline data
             var loadTimelineData = fetch("data/yearly_dog_intake_adoption_fixed.csv")
                 .then(function (response) {
                     if (!response.ok) {
@@ -20,8 +21,8 @@
                     return response.text();
                 })
                 .then(function (csvText) {
-                    var rows = csvText.trim().split("\n");
-                    var header = rows[0].split(",");
+                    var rows = parseCSV(csvText);
+                    var header = cleanHeader(rows[0]);
 
                     var yearIndex = header.indexOf("Year");
                     var intakeIndex = header.indexOf("Intakes");
@@ -31,14 +32,13 @@
                     var parsedData = [];
 
                     for (var i = 1; i < rows.length; i++) {
-                        var cols = rows[i].split(",");
+                        var row = rows[i];
 
-                        var year = Number(cols[yearIndex]);
-                        var intake = Number(cols[intakeIndex]);
-                        var adoption = Number(cols[adoptionIndex]);
-                        var gap = Number(cols[gapIndex]);
+                        var year = Number(row[yearIndex]);
+                        var intake = Number(row[intakeIndex]);
+                        var adoption = Number(row[adoptionIndex]);
+                        var gap = Number(row[gapIndex]);
 
-                        // Keep only full years
                         if (year >= 2014 && year <= 2024) {
                             parsedData.push({
                                 year: year,
@@ -54,91 +54,39 @@
                     return manager.dogData;
                 })
                 .catch(function (error) {
-                    console.error("Error loading timeline CSV:", error);
+                    console.error("Error loading timeline data:", error);
                     manager.dogData = [];
                     return manager.dogData;
                 });
 
 
-            var loadOutcomeData = fetch("data/outcome.csv")
+            // 2. Load outcome breakdown data
+            var loadOutcomeData = fetch("data/dog_outcome_breakdown.csv")
                 .then(function (response) {
                     if (!response.ok) {
-                        throw new Error("Cannot find data/outcome.csv");
+                        throw new Error("Cannot find data/dog_outcome_breakdown.csv");
                     }
                     return response.text();
                 })
                 .then(function (csvText) {
                     var rows = parseCSV(csvText);
-                    var header = rows[0];
+                    var header = cleanHeader(rows[0]);
 
-                    var dateIndex = header.indexOf("DateTime");
-                    var outcomeIndex = header.indexOf("Outcome Type");
-                    var animalIndex = header.indexOf("Animal Type");
+                    var outcomeIndex = header.indexOf("Outcome");
+                    var countIndex = header.indexOf("Count");
 
-                    var counts = {};
+                    var parsedData = [];
 
                     for (var i = 1; i < rows.length; i++) {
                         var row = rows[i];
 
-                        var dateText = row[dateIndex];
-                        var animalType = row[animalIndex];
-                        var outcomeType = row[outcomeIndex];
-
-                        if (!dateText || !animalType) {
+                        if (!row || row.length < 2) {
                             continue;
                         }
-
-                        // Only dogs
-                        if (animalType !== "Dog") {
-                            continue;
-                        }
-
-                        var year = getYearFromDate(dateText);
-
-                        // Keep only full years
-                        if (year < 2014 || year > 2024) {
-                            continue;
-                        }
-
-                        if (!outcomeType || outcomeType.trim() === "") {
-                            outcomeType = "Unknown";
-                        }
-
-                        // Keep main categories, combine small categories into Other
-                        if (
-                            outcomeType !== "Adoption" &&
-                            outcomeType !== "Return to Owner" &&
-                            outcomeType !== "Transfer" &&
-                            outcomeType !== "Euthanasia" &&
-                            outcomeType !== "Rto-Adopt"
-                        ) {
-                            outcomeType = "Other";
-                        }
-
-                        if (!counts[outcomeType]) {
-                            counts[outcomeType] = 0;
-                        }
-
-                        counts[outcomeType]++;
-                    }
-
-                    var orderedOutcomes = [
-                        "Adoption",
-                        "Return to Owner",
-                        "Transfer",
-                        "Euthanasia",
-                        "Rto-Adopt",
-                        "Other"
-                    ];
-
-                    var parsedData = [];
-
-                    for (var j = 0; j < orderedOutcomes.length; j++) {
-                        var name = orderedOutcomes[j];
 
                         parsedData.push({
-                            outcome: name,
-                            count: counts[name] || 0
+                            outcome: row[outcomeIndex],
+                            count: Number(row[countIndex])
                         });
                     }
 
@@ -147,15 +95,118 @@
                     return manager.outcomeData;
                 })
                 .catch(function (error) {
-                    console.error("Error loading outcome CSV:", error);
+                    console.error("Error loading outcome data:", error);
                     manager.outcomeData = [];
                     return manager.outcomeData;
                 });
 
-            return Promise.all([loadTimelineData, loadOutcomeData]);
+
+            // 3. Load adoption heatmap data
+            var loadHeatmapData = fetch("data/dog_adoption_heatmap.csv")
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Cannot find data/dog_adoption_heatmap.csv");
+                    }
+                    return response.text();
+                })
+                .then(function (csvText) {
+                    var rows = parseCSV(csvText);
+                    var header = cleanHeader(rows[0]);
+
+                    var monthIndex = header.indexOf("Month");
+                    var dayIndex = header.indexOf("Day");
+                    var countIndex = header.indexOf("Count");
+
+                    var parsedData = [];
+
+                    for (var i = 1; i < rows.length; i++) {
+                        var row = rows[i];
+
+                        if (!row || row.length < 3) {
+                            continue;
+                        }
+
+                        parsedData.push({
+                            month: Number(row[monthIndex]),
+                            day: Number(row[dayIndex]),
+                            count: Number(row[countIndex])
+                        });
+                    }
+
+                    manager.heatmapData = parsedData;
+                    console.log("Loaded heatmap data:", manager.heatmapData);
+                    return manager.heatmapData;
+                })
+                .catch(function (error) {
+                    console.error("Error loading heatmap data:", error);
+                    manager.heatmapData = [];
+                    return manager.heatmapData;
+                });
+
+
+            // 4. Load breed intake vs adoption data
+            var loadBreedData = fetch("data/dog_breed_intake_adoption.csv")
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Cannot find data/dog_breed_intake_adoption.csv");
+                    }
+                    return response.text();
+                })
+                .then(function (csvText) {
+                    var rows = parseCSV(csvText);
+                    var header = cleanHeader(rows[0]);
+
+                    var breedIndex = header.indexOf("Breed");
+                    var intakeIndex = header.indexOf("Intake");
+                    var adoptionIndex = header.indexOf("Adoption");
+                    var gapIndex = header.indexOf("Gap");
+                    var rateIndex = header.indexOf("AdoptionRate");
+
+                    var parsedData = [];
+
+                    for (var i = 1; i < rows.length; i++) {
+                        var row = rows[i];
+
+                        if (!row || row.length < 5) {
+                            continue;
+                        }
+
+                        parsedData.push({
+                            breed: row[breedIndex],
+                            intake: Number(row[intakeIndex]),
+                            adoption: Number(row[adoptionIndex]),
+                            gap: Number(row[gapIndex]),
+                            adoptionRate: Number(row[rateIndex])
+                        });
+                    }
+
+                    manager.breedData = parsedData;
+                    console.log("Loaded breed data:", manager.breedData);
+                    return manager.breedData;
+                })
+                .catch(function (error) {
+                    console.error("Error loading breed data:", error);
+                    manager.breedData = [];
+                    return manager.breedData;
+                });
+
+
+            return Promise.all([
+                loadTimelineData,
+                loadOutcomeData,
+                loadHeatmapData,
+                loadBreedData
+            ]);
         },
 
+
         draw: function (p, manager, ai, progress) {
+
+            // Section 0 and 1: title pages
+            if (ai === 0 || ai === 1) {
+                window.VizTitle.draw(p, manager, ai, progress);
+                return;
+            }
 
             // Section 2: intake vs adoption timeline
             if (ai === 2) {
@@ -163,36 +214,46 @@
                 return;
             }
 
-            // Section 3: outcome breakdown donut chart
+            // Section 3: outcome breakdown
             if (ai === 3) {
                 window.VizOutcome.draw(p, manager, ai, progress);
                 return;
             }
 
-            // Original title sections
-            if (ai === 0 || ai === 1) {
-                window.VizTitle.draw(p, manager, ai, progress);
+            // Section 4 or 5: adoption heatmap
+            if (ai === 4 || ai === 5) {
+                window.VizHeatmap.draw(p, manager, ai, progress);
                 return;
             }
 
-            // Original progress color examples
-            if (ai === 6 || ai === 9) {
+            // Section 6: breed intake vs adoption
+            if (ai === 6) {
+                window.VizBreed.draw(p, manager, ai, progress);
+                return;
+            }
+
+            // Original demo section
+            if (ai === 9) {
                 window.VizProgressColor.draw(p, manager, ai, progress);
                 return;
             }
 
-            // Original scatter examples
-            if (ai >= 4 && ai < 6) {
-                window.VizScatter.draw(p, manager, ai, progress);
-                return;
-            }
-
-            // If no visualization is assigned, leave the canvas blank.
+            // If no visualization is assigned, leave blank.
         }
     };
 
 
-    // CSV parser that can handle commas inside quoted fields
+    function cleanHeader(headerRow) {
+        var cleaned = [];
+
+        for (var i = 0; i < headerRow.length; i++) {
+            cleaned.push(headerRow[i].replace(/^\uFEFF/, "").trim());
+        }
+
+        return cleaned;
+    }
+
+
     function parseCSV(text) {
         var rows = [];
         var row = [];
@@ -233,14 +294,6 @@
         }
 
         return rows;
-    }
-
-
-    function getYearFromDate(dateText) {
-        // outcome.csv DateTime example:
-        // 2014-07-11T00:00:00-05:00
-        // first 4 characters are the year
-        return Number(dateText.substring(0, 4));
     }
 
 })();
