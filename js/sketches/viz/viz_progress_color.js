@@ -1,38 +1,56 @@
 // viz_progress_color.js
 // Demonstrates progress-based animation for students.
 (function () {
+    var YEARS    = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+    var ADOPT    = [2.4, 2.6, 2.7, 2.9, 3.1, 3.6, 4.4, 3.9, 4.0, 4.1];
+    var PURCHASE = [3.1, 3.0, 2.9, 2.8, 2.8, 3.2, 2.6, 2.5, 2.5, 2.4];
+
+    var COLOR_ADOPT    = [29,  158, 117];
+    var COLOR_PURCHASE = [216,  90,  48];
+
     window.VizProgressColor = {
         draw: function (p, manager, ai, progress) {
-            var cols = manager.width || 600;
-            var rows = manager.height || 520;
+            
             var ox = manager.offsetX || 0;
             var oy = manager.offsetY || 0;
-            var dotR = 10;
-            var spacing = 36;
-            var numCols = Math.floor(cols / spacing);
-            var numRows = Math.floor(rows / spacing);
-            var inRange = progress >= 0.09 && progress <= 0.3;
+            var W     = manager.width   || 600;
+            var H     = manager.height  || 520;
 
-            p.push();
+            var padL = 40, padR = 16, padT = 40, padB = 50;
+            var chartW = W - padL - padR;
+            var chartH = H - padT - padB;
+
+            var n      = YEARS.length;
+            var groupW = chartW / n;
+            var maxVal = 5.5;
+
+            function toX(i)   { return ox + padL + i * groupW + groupW / 2; }
+            function toY(val) { return oy + padT + chartH - (val / maxVal) * chartH; }
+
+            // gridlines + y labels
+            p.textAlign(p.RIGHT, p.CENTER);
+            p.textSize(11);
+            [0, 1, 2, 3, 4, 5].forEach(function (v) {
+                var y = toY(v);
+                p.stroke(180); p.strokeWeight(0.5);
+                p.line(ox + padL, y, ox + padL + chartW, y);
+                p.noStroke();
+                p.fill(120);
+                p.text(v + 'M', ox + padL - 6, y);
+            });
+
+            // x labels
+            p.textAlign(p.CENTER, p.TOP);
+            p.textSize(11);
             p.noStroke();
-            for (var r = 0; r < numRows; r++) {
-                for (var c = 0; c < numCols; c++) {
-                    var x = ox + spacing / 2 + c * spacing;
-                    var y = oy + spacing / 2 + r * spacing;
-                    p.fill(inRange ? p.color(220, 60, 60, 200) : p.color(180, 210, 230, 180));
-                    p.ellipse(x, y, dotR, dotR);
-                }
-            }
-
-            p.fill(inRange ? p.color(220, 60, 60) : p.color(100));
-            p.textAlign(p.CENTER, p.CENTER);
-            p.textSize(14);
-            p.text(
-                'if (progress > 0.09 && progress < 0.3)  →  red dots       progress: ' + progress.toFixed(2),
-                ox + cols / 2,
-                oy + rows - 20
-            );
-            p.pop();
+            YEARS.forEach(function (yr, i) {
+                p.fill(120);
+                p.text(yr, toX(i), oy + padT + chartH + 8);
+            });
         }
     };
+
 })();
+
+   
+            
