@@ -72,6 +72,38 @@
                 p.fill(COLOR_PURCHASE[0], COLOR_PURCHASE[1], COLOR_PURCHASE[2], 210);
                 p.rect(cx + 2, oy + padT + chartH - pH, barW, pH, 2);
             });
+
+            // crossover annotation at 2019 (index 4)
+            // 0.7 → 1.0  annotation fades in
+            var annoAlpha = p.constrain((progress - 0.7) / 0.2, 0, 1);
+
+            if (annoAlpha > 0) {
+                var cx2019 = toX(4);
+                p.stroke(80);
+                p.strokeWeight(1);
+                p.drawingContext.setLineDash([4, 4]);
+                p.line(cx2019, oy + padT, cx2019, oy + padT + chartH);
+                p.drawingContext.setLineDash([]);
+                p.noStroke();
+                p.fill(60, 60, 60, annoAlpha * 220);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(12);
+                p.text('Adoptions overtook purchases', cx2019, toY(3.1));
+                p.text('in 2019', cx2019, toY(3.1) + 16);
+            }
+
+            // legend
+            p.noStroke();
+            p.textAlign(p.LEFT, p.CENTER);
+            p.textSize(12);
+            p.fill(COLOR_ADOPT[0], COLOR_ADOPT[1], COLOR_ADOPT[2]);
+            p.rect(ox + padL, oy + 12, 12, 12, 2);
+            p.fill(80);
+            p.text('Adopted', ox + padL + 18, oy + 18);
+            p.fill(COLOR_PURCHASE[0], COLOR_PURCHASE[1], COLOR_PURCHASE[2]);
+            p.rect(ox + padL + 90, oy + 12, 12, 12, 2);
+            p.fill(80);
+            p.text('Purchased', ox + padL + 108, oy + 18);
         }
     };
 
