@@ -11,6 +11,8 @@
             manager.outcomeData = [];
             manager.heatmapData = [];
             manager.breedData = [];
+            manager.radarData = [];
+            manager.breedPhotoMap = {};
 
             // 1. Load intake vs adoption timeline data
             var loadTimelineData = fetch("data/yearly_dog_intake_adoption_fixed.csv")
@@ -191,16 +193,128 @@
                 });
 
 
+            // 5. Load breed radar data
+            var loadRadarData = fetch("data/dog_breed_radar_top20.csv")
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Cannot find data/dog_breed_radar_top20.csv");
+                    }
+                    return response.text();
+                })
+                .then(function (csvText) {
+                    var rows = parseCSV(csvText);
+                    var header = cleanHeader(rows[0]);
+
+                    var shelterIndex = header.indexOf("ShelterBreed");
+                    var akcIndex = header.indexOf("AKCBreed");
+                    var intakeIndex = header.indexOf("IntakeCount");
+
+                    var groomingIndex = header.indexOf("Grooming");
+                    var sheddingIndex = header.indexOf("Shedding");
+                    var energyIndex = header.indexOf("Energy");
+                    var trainIndex = header.indexOf("Trainability");
+                    var demeanorIndex = header.indexOf("Demeanor");
+
+                    var groomingLabelIndex = header.indexOf("GroomingLabel");
+                    var sheddingLabelIndex = header.indexOf("SheddingLabel");
+                    var energyLabelIndex = header.indexOf("EnergyLabel");
+                    var trainLabelIndex = header.indexOf("TrainabilityLabel");
+                    var demeanorLabelIndex = header.indexOf("DemeanorLabel");
+                    var tempIndex = header.indexOf("Temperament");
+
+                    var parsedData = [];
+
+                    for (var i = 1; i < rows.length; i++) {
+                        var row = rows[i];
+
+                        if (!row || row.length < 14) {
+                            continue;
+                        }
+
+                        parsedData.push({
+                            shelterBreed: row[shelterIndex],
+                            akcBreed: row[akcIndex],
+                            intakeCount: Number(row[intakeIndex]),
+
+                            grooming: Number(row[groomingIndex]),
+                            shedding: Number(row[sheddingIndex]),
+                            energy: Number(row[energyIndex]),
+                            trainability: Number(row[trainIndex]),
+                            demeanor: Number(row[demeanorIndex]),
+
+                            groomingLabel: row[groomingLabelIndex],
+                            sheddingLabel: row[sheddingLabelIndex],
+                            energyLabel: row[energyLabelIndex],
+                            trainabilityLabel: row[trainLabelIndex],
+                            demeanorLabel: row[demeanorLabelIndex],
+                            temperament: row[tempIndex]
+                        });
+                    }
+
+                    manager.radarData = parsedData;
+                    console.log("Loaded radar data:", manager.radarData);
+                    return manager.radarData;
+                })
+                .catch(function (error) {
+                    console.error("Error loading radar data:", error);
+                    manager.radarData = [];
+                    return manager.radarData;
+                });
+
+
+            // 6. Load breed photo data from GitHub raw JSON
+            var loadBreedPhotoData = fetch("https://raw.githubusercontent.com/chrisvogt/dog-breeds/main/dog-breeds.json")
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("Cannot load dog breed photo JSON");
+                    }
+                    return response.json();
+                })
+                .then(function (json) {
+                    var photoMap = {};
+
+                    for (var i = 0; i < json.length; i++) {
+                        var item = json[i];
+
+                        if (item.name && item.imageURL && item.imageURL.trim() !== "") {
+                            photoMap[item.name.trim().toLowerCase()] = item.imageURL.trim();
+                        }
+                    }
+
+                    manager.breedPhotoMap = photoMap;
+                    console.log("Loaded breed photo map:", Object.keys(photoMap).length);
+                    return photoMap;
+                })
+                .catch(function (error) {
+                    console.error("Error loading breed photo data:", error);
+                    manager.breedPhotoMap = {};
+                    return manager.breedPhotoMap;
+                });
+
+
             return Promise.all([
                 loadTimelineData,
                 loadOutcomeData,
                 loadHeatmapData,
-                loadBreedData
+                loadBreedData,
+                loadRadarData,
+                loadBreedPhotoData
             ]);
         },
 
 
         draw: function (p, manager, ai, progress) {
+
+            // Hide radar dropdown and photo when not on radar section
+            if (ai !== 7) {
+                if (manager.radarSelect) {
+                    manager.radarSelect.hide();
+                }
+
+                if (manager.breedPhotoEl) {
+                    manager.breedPhotoEl.hide();
+                }
+            }
 
             // Section 0 and 1: title pages
             if (ai === 0 || ai === 1) {
@@ -229,6 +343,12 @@
             // Section 6: breed intake vs adoption
             if (ai === 6) {
                 window.VizBreed.draw(p, manager, ai, progress);
+                return;
+            }
+
+            // Section 7: breed radar chart
+            if (ai === 7) {
+                window.VizRadar.draw(p, manager, ai, progress);
                 return;
             }
 
