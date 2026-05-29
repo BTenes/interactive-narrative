@@ -47,10 +47,36 @@
                 p.fill(120);
                 p.text(yr, toX(i), oy + padT + chartH + 8);
             });
+
+            // progress phases:
+            // 0.0 → 0.1  axes visible
+            // 0.1 → 0.7  bars grow left to right
+            var barW        = groupW * 0.35;
+            var barProgress = p.constrain((progress - 0.1) / 0.6, 0, 1);
+
+            YEARS.forEach(function (yr, i) {
+                var colStart    = i / n;
+                var colEnd      = (i + 1) / n;
+                var colProgress = p.constrain(
+                    (barProgress - colStart) / (colEnd - colStart), 0, 1
+                );
+
+                var cx = toX(i);
+                var aH = (ADOPT[i]    / maxVal) * chartH * colProgress;
+                var pH = (PURCHASE[i] / maxVal) * chartH * colProgress;
+
+                p.noStroke();
+                p.fill(COLOR_ADOPT[0], COLOR_ADOPT[1], COLOR_ADOPT[2], 210);
+                p.rect(cx - barW - 2, oy + padT + chartH - aH, barW, aH, 2);
+
+                p.fill(COLOR_PURCHASE[0], COLOR_PURCHASE[1], COLOR_PURCHASE[2], 210);
+                p.rect(cx + 2, oy + padT + chartH - pH, barW, pH, 2);
+            });
         }
     };
 
 })();
+            
 
    
             
