@@ -305,6 +305,7 @@
 
         draw: function (p, manager, ai, progress) {
 
+
             // Hide radar dropdown and photo when not on radar section
             if (ai !== 7) {
                 if (manager.radarSelect) {
@@ -349,6 +350,12 @@
             // Section 7: breed radar chart
             if (ai === 7) {
                 window.VizRadar.draw(p, manager, ai, progress);
+                return;
+            }
+
+            // Section 11: state map
+            if (ai === 11) {
+                window.VizMap.draw(p, manager, ai, progress);
                 return;
             }
 
