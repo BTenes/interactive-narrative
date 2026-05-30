@@ -111,6 +111,14 @@
             var hoveredName = null;
 
             // draw each state
+            function projectCoord(lon, lat, fips) {
+                // Hawaii: shift right and up into view
+                if (fips === '15') {
+                    return project(lon + 57, lat + 5);
+                }
+                return project(lon, lat);
+            }
+
             geoData.forEach(function (feature) {
                 var fips = String(feature.id).padStart(2, '0');
                 var name = fipsToName[fips];
@@ -137,13 +145,50 @@
                     poly.forEach(function (ring) {
                         p.beginShape();
                         ring.forEach(function (coord) {
-                            var pt = project(coord[0], coord[1]);
+                            var pt = projectCoord(coord[0], coord[1], fips);
                             p.vertex(pt[0], pt[1]);
                         });
                         p.endShape(p.CLOSE);
                     });
                 });
             });
+
+            // draw Alaska separately in bottom-left
+            var akFeature = geoData.find(function(f) {
+                return String(f.id).padStart(2,'0') === '02';
+            });
+            if (akFeature && csvData['Alaska']) {
+                var akInfo = csvData['Alaska'];
+                var t3 = akInfo.rescues / maxRescues;
+                var ar = Math.round(p.lerp(200, 27,  t3));
+                var ag = Math.round(p.lerp(230, 94,  t3));
+                var ab = Math.round(p.lerp(201, 32,  t3));
+
+                p.fill(ar, ag, ab);
+                p.stroke(255);
+                p.strokeWeight(0.8);
+
+                var akGeom = akFeature.geometry;
+                var akPolys = akGeom.type === 'Polygon'
+                    ? [akGeom.coordinates]
+                    : akGeom.coordinates;
+
+                akPolys.forEach(function(poly) {
+                    poly.forEach(function(ring) {
+                        p.beginShape();
+                        ring.forEach(function(coord) {
+                            var lon = coord[0];
+                            var lat = coord[1];
+                            var nx = (lon - (-180)) / ((-130) - (-180));
+                            var ny = (lat - 50)     / (72 - 50);
+                            var ax = ox + W * 0.01 + nx * W * 0.18;
+                            var ay = oy + H * 0.95 - ny * H * 0.22;
+                            p.vertex(ax, ay);
+                        });
+                        p.endShape(p.CLOSE);
+                    });
+                });
+            }
 
             // hover tooltip using p5 text
             geoData.forEach(function (feature) {
@@ -152,6 +197,34 @@
                 if (!name) return;
                 var info = csvData[name];
                 if (!info) return;
+
+                // Alaska uses fixed coords, check separately
+                if (fips === '02') {
+                    var akGeom2  = feature.geometry;
+                    var akPolys2 = akGeom2.type === 'Polygon' ? [akGeom2.coordinates] : akGeom2.coordinates;
+                    akPolys2.forEach(function(poly) {
+                        var ring = poly[0];
+                        var inside = false;
+                        for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                            var lon1 = ring[i][0], lat1 = ring[i][1];
+                            var lon2 = ring[j][0], lat2 = ring[j][1];
+                            var nx1 = (lon1 - (-180)) / ((-130) - (-180));
+                            var ny1 = (lat1 - 50) / (72 - 50);
+                            var nx2 = (lon2 - (-180)) / ((-130) - (-180));
+                            var ny2 = (lat2 - 50) / (72 - 50);
+                            var ax1 = ox + W * 0.01 + nx1 * W * 0.18;
+                            var ay1 = oy + H * 0.95 - ny1 * H * 0.22;
+                            var ax2 = ox + W * 0.01 + nx2 * W * 0.18;
+                            var ay2 = oy + H * 0.95 - ny2 * H * 0.22;
+                            if (((ay1 > my) !== (ay2 > my)) &&
+                                (mx < (ax2 - ax1) * (my - ay1) / (ay2 - ay1) + ax1)) {
+                                inside = !inside;
+                            }
+                        }
+                        if (inside) hoveredName = 'Alaska';
+                    });
+                    return;
+                }
 
                 var geom = feature.geometry;
                 var polys = geom.type === 'Polygon'
@@ -163,8 +236,8 @@
                     // point-in-polygon check
                     var inside = false;
                     for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-                        var pi = project(ring[i][0], ring[i][1]);
-                        var pj = project(ring[j][0], ring[j][1]);
+                        var pi = projectCoord(ring[i][0], ring[i][1], fips);
+                        var pj = projectCoord(ring[j][0], ring[j][1], fips);
                         if (((pi[1] > my) !== (pj[1] > my)) &&
                             (mx < (pj[0] - pi[0]) * (my - pi[1]) / (pj[1] - pi[1]) + pi[0])) {
                             inside = !inside;
