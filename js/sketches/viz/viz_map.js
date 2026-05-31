@@ -41,13 +41,15 @@
             var stateIdx   = headers.indexOf('State');
             var rescueIdx  = headers.indexOf('Rescues');
             var shelterIdx = headers.indexOf('Shelters');
+            var intakeIdx  = headers.indexOf('Avg_Community_Intakes_Dogs');
             csvData = {};
             for (var i = 1; i < lines.length; i++) {
                 var cols = lines[i].split(',');
                 if (!cols[stateIdx]) continue;
                 csvData[cols[stateIdx].trim()] = {
                     rescues:  +cols[rescueIdx],
-                    shelters: +cols[shelterIdx]
+                    shelters: +cols[shelterIdx],
+                    intakes:  +cols[intakeIdx]
                 };
             }
         }).catch(function (err) {
@@ -80,8 +82,8 @@
             p.noStroke();
             p.fill(40);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(16);
-            p.text('Rescue Organizations Across the U.S.', ox, oy + 8);
+            p.textSize(22);
+            p.text('Where are the Stray Dogs?', ox, oy + 8);
 
             // find max for color scale
             var maxRescues = 0;
@@ -259,7 +261,7 @@
                 var info = csvData[hoveredName];
                 var tx = mx + 12;
                 var ty = my - 10;
-                var tw = 160, th = 52;
+                var tw = 160, th = 66;
                 p.noStroke();
                 p.fill(255);
                 p.rect(tx, ty, tw, th, 4);
@@ -274,6 +276,7 @@
                 p.fill(100);
                 p.text('Rescues: '  + info.rescues,  tx + 8, ty + 24);
                 p.text('Shelters: ' + info.shelters, tx + 8, ty + 38);
+                p.text('Stray Dogs: ' + info.intakes,  tx + 8, ty + 52);
             }
 
             // legend
