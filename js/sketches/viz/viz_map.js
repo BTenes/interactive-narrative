@@ -86,9 +86,9 @@
             p.text('Where are the Stray Dogs?', ox, oy + 8);
 
             // find max for color scale
-            var maxRescues = 0;
+            var maxVal = 0;
             Object.values(csvData).forEach(function (d) {
-                if (d.rescues > maxRescues) maxRescues = d.rescues;
+                if (d.intakes > maxVal) maxVal = d.intakes;
             });
 
             // AlbersUSA-like projection parameters (approximate)
@@ -132,10 +132,10 @@
                 var fips = String(feature.id).padStart(2, '0');
                 var name = fipsToName[fips];
                 var info = name && csvData[name];
-                var rescues = info ? info.rescues : 0;
+                var rescues = info ? info.intakes : 0;
 
                 // color: light green → dark green
-                var t  = rescues / maxRescues;
+                var t  = rescues / maxVal;
                 var r  = Math.round(p.lerp(200, 27,  t));
                 var g  = Math.round(p.lerp(230, 94,  t));
                 var bv = Math.round(p.lerp(201, 32,  t));
@@ -168,7 +168,7 @@
             });
             if (akFeature && csvData['Alaska']) {
                 var akInfo = csvData['Alaska'];
-                var t3 = akInfo.rescues / maxRescues;
+                var t3 = akInfo.intakes / maxVal;
                 var ar = Math.round(p.lerp(200, 27,  t3));
                 var ag = Math.round(p.lerp(230, 94,  t3));
                 var ab = Math.round(p.lerp(201, 32,  t3));
@@ -284,7 +284,7 @@
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(11);
             p.fill(80);
-            p.text('Rescue orgs per state', ox + W - 160, oy + H - 48);
+            p.text('Stray dogs per state', ox + W - 160, oy + H - 48);
             for (var i = 0; i <= 100; i++) {
                 var t2 = i / 100;
                 var lr = Math.round(p.lerp(200, 27,  t2));
