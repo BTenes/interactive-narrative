@@ -41,13 +41,15 @@
             var stateIdx   = headers.indexOf('State');
             var rescueIdx  = headers.indexOf('Rescues');
             var shelterIdx = headers.indexOf('Shelters');
+            var intakeIdx  = headers.indexOf('Avg_Community_Intakes_Dogs');
             csvData = {};
             for (var i = 1; i < lines.length; i++) {
                 var cols = lines[i].split(',');
                 if (!cols[stateIdx]) continue;
                 csvData[cols[stateIdx].trim()] = {
                     rescues:  +cols[rescueIdx],
-                    shelters: +cols[shelterIdx]
+                    shelters: +cols[shelterIdx],
+                    intakes:  +cols[intakeIdx]
                 };
             }
         }).catch(function (err) {
@@ -76,10 +78,17 @@
                 return;
             }
 
+            // map title
+            p.noStroke();
+            p.fill(40);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(22);
+            p.text('Where are the Stray Dogs?', ox, oy + 8);
+
             // find max for color scale
-            var maxRescues = 0;
+            var maxVal = 0;
             Object.values(csvData).forEach(function (d) {
-                if (d.rescues > maxRescues) maxRescues = d.rescues;
+                if (d.intakes > maxVal) maxVal = d.intakes;
             });
 
             // AlbersUSA-like projection parameters (approximate)
@@ -123,10 +132,10 @@
                 var fips = String(feature.id).padStart(2, '0');
                 var name = fipsToName[fips];
                 var info = name && csvData[name];
-                var rescues = info ? info.rescues : 0;
+                var rescues = info ? info.intakes : 0;
 
                 // color: light green → dark green
-                var t  = rescues / maxRescues;
+                var t  = rescues / maxVal;
                 var r  = Math.round(p.lerp(200, 27,  t));
                 var g  = Math.round(p.lerp(230, 94,  t));
                 var bv = Math.round(p.lerp(201, 32,  t));
@@ -159,7 +168,7 @@
             });
             if (akFeature && csvData['Alaska']) {
                 var akInfo = csvData['Alaska'];
-                var t3 = akInfo.rescues / maxRescues;
+                var t3 = akInfo.intakes / maxVal;
                 var ar = Math.round(p.lerp(200, 27,  t3));
                 var ag = Math.round(p.lerp(230, 94,  t3));
                 var ab = Math.round(p.lerp(201, 32,  t3));
@@ -252,7 +261,7 @@
                 var info = csvData[hoveredName];
                 var tx = mx + 12;
                 var ty = my - 10;
-                var tw = 160, th = 52;
+                var tw = 160, th = 66;
                 p.noStroke();
                 p.fill(255);
                 p.rect(tx, ty, tw, th, 4);
@@ -267,6 +276,7 @@
                 p.fill(100);
                 p.text('Rescues: '  + info.rescues,  tx + 8, ty + 24);
                 p.text('Shelters: ' + info.shelters, tx + 8, ty + 38);
+                p.text('Stray Dogs: ' + info.intakes,  tx + 8, ty + 52);
             }
 
             // legend
@@ -274,7 +284,7 @@
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(11);
             p.fill(80);
-            p.text('Rescue orgs per state', ox + W - 160, oy + H - 48);
+            p.text('Stray dogs per state', ox + W - 160, oy + H - 48);
             for (var i = 0; i <= 100; i++) {
                 var t2 = i / 100;
                 var lr = Math.round(p.lerp(200, 27,  t2));
