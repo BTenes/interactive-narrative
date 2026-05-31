@@ -76,6 +76,13 @@
                 return;
             }
 
+            // map title
+            p.noStroke();
+            p.fill(40);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(16);
+            p.text('Rescue Organizations Across the U.S.', ox, oy + 8);
+
             // find max for color scale
             var maxRescues = 0;
             Object.values(csvData).forEach(function (d) {
