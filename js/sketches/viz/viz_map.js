@@ -330,7 +330,7 @@
             if (dcInfo) {
                 var dcCoord = projectCoord(-77.0369, 38.9072, '11');
                 var dcLabelX = ox + W - 160;
-                var dcLabelY = oy + H * 0.35;
+                var dcLabelY = oy + H * 0.25;
 
                 // leader line
                 p.stroke(120);
