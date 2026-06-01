@@ -324,6 +324,33 @@
                 p.text(s.intakes, ox + W, listY + 18 + i * 16);
                 p.textAlign(p.LEFT, p.TOP);
             });
+
+            // DC annotation with leader line
+            var dcInfo = csvData['District of Columbia'];
+            if (dcInfo) {
+                var dcCoord = projectCoord(-77.0369, 38.9072, '11');
+                var dcLabelX = ox + W - 160;
+                var dcLabelY = oy + H * 0.35;
+
+                // leader line
+                p.stroke(120);
+                p.strokeWeight(0.8);
+                p.line(dcCoord[0], dcCoord[1], dcLabelX, dcLabelY + 8);
+
+                // dot on DC
+                p.noStroke();
+                p.fill(80);
+                p.ellipse(dcCoord[0], dcCoord[1], 5, 5);
+
+                // label
+                p.fill(60);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text('D.C.', dcLabelX, dcLabelY);
+                p.fill(120);
+                p.textSize(10);
+                p.text('Stray Dogs: ' + dcInfo.intakes, dcLabelX, dcLabelY + 14);
+            }
         }
     };
 
