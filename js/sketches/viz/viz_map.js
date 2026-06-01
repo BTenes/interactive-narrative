@@ -298,6 +298,110 @@
             p.text('Fewer', ox + W - 160, oy + H - 18);
             p.textAlign(p.RIGHT, p.TOP);
             p.text('More', ox + W, oy + H - 18);
+
+             // top 5 states by stray dogs
+            var stateList = Object.keys(csvData).map(function(name) {
+                return { name: name, intakes: csvData[name].intakes };
+            });
+            stateList.sort(function(a, b) { return b.intakes - a.intakes; });
+            var top5 = stateList.slice(0, 5);
+
+            var listX = ox + W - 160;
+            var listY = oy + H - 160;
+
+            p.noStroke();
+            p.fill(60);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(12);
+            p.text('Top 5 Stray Dog States', listX, listY);
+
+            p.textSize(11);
+            top5.forEach(function(s, i) {
+                p.fill(80);
+                p.text((i + 1) + '. ' + s.name, listX, listY + 18 + i * 16);
+                p.fill(130);
+                p.textAlign(p.RIGHT, p.TOP);
+                p.text(s.intakes, ox + W, listY + 18 + i * 16);
+                p.textAlign(p.LEFT, p.TOP);
+            });
+
+            // abbreviations for top 5 states on map
+            var abbrMap = {
+                'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR',
+                'California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE',
+                'District of Columbia':'DC','Florida':'FL','Georgia':'GA','Hawaii':'HI',
+                'Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS',
+                'Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+                'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS',
+                'Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV',
+                'New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY',
+                'North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK',
+                'Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+                'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT',
+                'Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV',
+                'Wisconsin':'WI','Wyoming':'WY'
+            };
+
+            var stateCenters = {
+                'District of Columbia': [-77.03, 38.90],
+                'New Mexico':           [-106.0, 34.5],
+                'Hawaii':               [-156.5, 20.5],
+                'Alabama':              [-86.8,  32.8],
+                'Kansas':               [-98.4,  38.5]
+            };
+
+            top5.forEach(function(s) {
+                var abbr = abbrMap[s.name];
+                var center = stateCenters[s.name];
+                if (!abbr || !center) return;
+                var fips = Object.keys(fipsToName).find(function(k) {
+                    return fipsToName[k] === s.name;
+                });
+                var pt = projectCoord(center[0], center[1], fips || '00');
+                p.noStroke();
+                p.fill(255);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(11);
+                p.text(abbr, pt[0], pt[1]);
+            });
+
+            // DC annotation with leader line
+            var dcInfo = csvData['District of Columbia'];
+            if (dcInfo) {
+                var dcCoord = projectCoord(-77.0369, 38.9072, '11');
+                var dcLabelX = ox + W - 160;
+                var dcLabelY = oy + H * 0.25;
+
+                // leader line
+                p.stroke(120);
+                p.strokeWeight(0.8);
+                p.line(dcCoord[0], dcCoord[1], dcLabelX, dcLabelY + 8);
+
+                // dot on DC
+                p.noStroke();
+                p.fill(80);
+                p.ellipse(dcCoord[0], dcCoord[1], 5, 5);
+
+                // label
+                p.fill(60);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text('D.C.', dcLabelX, dcLabelY);
+                p.fill(120);
+                p.textSize(10);
+                p.text('Stray Dogs: ' + dcInfo.intakes, dcLabelX, dcLabelY + 14);
+            }
+
+             // Hawaii label directly on island
+            var hiInfo = csvData['Hawaii'];
+            if (hiInfo) {
+                var hiCoord = projectCoord(-156.5, 20.5, '15');
+                p.noStroke();
+                p.fill(255);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(11);
+                p.text('HI', hiCoord[0], hiCoord[1]);
+            }
         }
     };
 
