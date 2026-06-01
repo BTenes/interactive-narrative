@@ -306,7 +306,7 @@
         draw: function (p, manager, ai, progress) {
 
             // Hide radar dropdown and photo when not on radar section
-            if (ai !== 7) {
+            if (ai !== 6) {
                 if (manager.radarSelect) {
                     manager.radarSelect.hide();
                 }
@@ -335,29 +335,22 @@
             }
 
             // Section 4 or 5: adoption heatmap
-            if (ai === 4 || ai === 5) {
+            if (ai === 4) {
                 window.VizHeatmap.draw(p, manager, ai, progress);
                 return;
             }
 
             // Section 6: breed intake vs adoption
-            if (ai === 6) {
+            if (ai === 5) {
                 window.VizBreed.draw(p, manager, ai, progress);
                 return;
             }
 
             // Section 7: breed radar chart
-            if (ai === 7) {
+            if (ai === 6) {
                 window.VizRadar.draw(p, manager, ai, progress);
                 return;
             }
-
-            // Original demo section
-            if (ai === 9) {
-                window.VizProgressColor.draw(p, manager, ai, progress);
-                return;
-            }
-
             // If no visualization is assigned, leave blank.
         }
     };
