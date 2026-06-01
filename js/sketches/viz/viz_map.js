@@ -128,77 +128,6 @@
                 return project(lon, lat);
             }
 
-            geoData.forEach(function (feature) {
-                var fips = String(feature.id).padStart(2, '0');
-                var name = fipsToName[fips];
-                var info = name && csvData[name];
-                var rescues = info ? info.intakes : 0;
-
-                // color: light green → dark green
-                var t  = rescues / maxVal;
-                var r  = Math.round(p.lerp(200, 27,  t));
-                var g  = Math.round(p.lerp(230, 94,  t));
-                var bv = Math.round(p.lerp(201, 32,  t));
-
-                // check hover
-                var geom = feature.geometry;
-                var polys = geom.type === 'Polygon'
-                    ? [geom.coordinates]
-                    : geom.coordinates;
-
-                p.stroke(255);
-                p.strokeWeight(0.8);
-                p.fill(r, g, bv);
-
-                polys.forEach(function (poly) {
-                    poly.forEach(function (ring) {
-                        p.beginShape();
-                        ring.forEach(function (coord) {
-                            var pt = projectCoord(coord[0], coord[1], fips);
-                            p.vertex(pt[0], pt[1]);
-                        });
-                        p.endShape(p.CLOSE);
-                    });
-                });
-            });
-
-            // draw Alaska separately in bottom-left
-            var akFeature = geoData.find(function(f) {
-                return String(f.id).padStart(2,'0') === '02';
-            });
-            if (akFeature && csvData['Alaska']) {
-                var akInfo = csvData['Alaska'];
-                var t3 = akInfo.intakes / maxVal;
-                var ar = Math.round(p.lerp(200, 27,  t3));
-                var ag = Math.round(p.lerp(230, 94,  t3));
-                var ab = Math.round(p.lerp(201, 32,  t3));
-
-                p.fill(ar, ag, ab);
-                p.stroke(255);
-                p.strokeWeight(0.8);
-
-                var akGeom = akFeature.geometry;
-                var akPolys = akGeom.type === 'Polygon'
-                    ? [akGeom.coordinates]
-                    : akGeom.coordinates;
-
-                akPolys.forEach(function(poly) {
-                    poly.forEach(function(ring) {
-                        p.beginShape();
-                        ring.forEach(function(coord) {
-                            var lon = coord[0];
-                            var lat = coord[1];
-                            var nx = (lon - (-180)) / ((-130) - (-180));
-                            var ny = (lat - 50)     / (72 - 50);
-                            var ax = ox + W * 0.01 + nx * W * 0.18;
-                            var ay = oy + H * 0.95 - ny * H * 0.22;
-                            p.vertex(ax, ay);
-                        });
-                        p.endShape(p.CLOSE);
-                    });
-                });
-            }
-
             // hover tooltip using p5 text
             geoData.forEach(function (feature) {
                 var fips = String(feature.id).padStart(2, '0');
@@ -255,6 +184,79 @@
                     if (inside) hoveredName = name;
                 });
             });
+
+            geoData.forEach(function (feature) {
+                var fips = String(feature.id).padStart(2, '0');
+                var name = fipsToName[fips];
+                var info = name && csvData[name];
+                var rescues = info ? info.intakes : 0;
+
+                // color: light green → dark green
+                var t  = rescues / maxVal;
+                var r  = Math.round(p.lerp(200, 27,  t));
+                var g  = Math.round(p.lerp(230, 94,  t));
+                var bv = Math.round(p.lerp(201, 32,  t));
+
+                // check hover
+                var geom = feature.geometry;
+                var polys = geom.type === 'Polygon'
+                    ? [geom.coordinates]
+                    : geom.coordinates;
+
+                var isHovered = (name === hoveredName);
+                p.stroke(isHovered ? p.color(40, 40, 40) : 255);
+                p.strokeWeight(isHovered ? 2.5 : 0.8);
+                p.fill(isHovered ? p.color(r, g, bv, 255) : p.color(r, g, bv, 210));
+
+                polys.forEach(function (poly) {
+                    poly.forEach(function (ring) {
+                        p.beginShape();
+                        ring.forEach(function (coord) {
+                            var pt = projectCoord(coord[0], coord[1], fips);
+                            p.vertex(pt[0], pt[1]);
+                        });
+                        p.endShape(p.CLOSE);
+                    });
+                });
+            });
+
+            // draw Alaska separately in bottom-left
+            var akFeature = geoData.find(function(f) {
+                return String(f.id).padStart(2,'0') === '02';
+            });
+            if (akFeature && csvData['Alaska']) {
+                var akInfo = csvData['Alaska'];
+                var t3 = akInfo.intakes / maxVal;
+                var ar = Math.round(p.lerp(200, 27,  t3));
+                var ag = Math.round(p.lerp(230, 94,  t3));
+                var ab = Math.round(p.lerp(201, 32,  t3));
+
+                p.fill(ar, ag, ab);
+                p.stroke(255);
+                p.strokeWeight(0.8);
+
+                var akGeom = akFeature.geometry;
+                var akPolys = akGeom.type === 'Polygon'
+                    ? [akGeom.coordinates]
+                    : akGeom.coordinates;
+
+                akPolys.forEach(function(poly) {
+                    poly.forEach(function(ring) {
+                        p.beginShape();
+                        ring.forEach(function(coord) {
+                            var lon = coord[0];
+                            var lat = coord[1];
+                            var nx = (lon - (-180)) / ((-130) - (-180));
+                            var ny = (lat - 50)     / (72 - 50);
+                            var ax = ox + W * 0.01 + nx * W * 0.18;
+                            var ay = oy + H * 0.95 - ny * H * 0.22;
+                            p.vertex(ax, ay);
+                        });
+                        p.endShape(p.CLOSE);
+                    });
+                });
+            }
+
 
             // draw tooltip
             if (hoveredName && csvData[hoveredName]) {
