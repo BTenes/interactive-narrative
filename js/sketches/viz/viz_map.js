@@ -404,6 +404,34 @@
                 p.textSize(11);
                 p.text('HI', hiCoord[0], hiCoord[1]);
             }
+
+            // Austin marker on Texas
+            var austinCoord = projectCoord(-97.7431, 30.2672, '48');
+            
+            // pulsing circle animation
+            var pulse = Math.sin(p.millis() / 400) * 0.5 + 0.5;
+            var pulseR = 10 + pulse * 8;
+            
+            p.noFill();
+            p.stroke(180, 50, 50, 150 * (1 - pulse));
+            p.strokeWeight(1.5);
+            p.ellipse(austinCoord[0], austinCoord[1], pulseR * 2, pulseR * 2);
+
+            p.fill(200, 50, 50);
+            p.noStroke();
+            p.ellipse(austinCoord[0], austinCoord[1], 8, 8);
+            p.fill(255);
+            p.ellipse(austinCoord[0], austinCoord[1], 3, 3);
+
+            // Austin label
+            p.noStroke();
+            p.fill(160, 40, 40);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(11);
+            p.text('Austin', austinCoord[0] + 8, austinCoord[1] - 6);
+            p.fill(180, 60, 60);
+            p.textSize(10);
+            p.text('our focus', austinCoord[0] + 8, austinCoord[1] + 6);
         }
     };
 
