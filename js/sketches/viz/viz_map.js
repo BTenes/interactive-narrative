@@ -298,6 +298,32 @@
             p.text('Fewer', ox + W - 160, oy + H - 18);
             p.textAlign(p.RIGHT, p.TOP);
             p.text('More', ox + W, oy + H - 18);
+
+             // top 5 states by stray dogs
+            var stateList = Object.keys(csvData).map(function(name) {
+                return { name: name, intakes: csvData[name].intakes };
+            });
+            stateList.sort(function(a, b) { return b.intakes - a.intakes; });
+            var top5 = stateList.slice(0, 5);
+
+            var listX = ox + W - 160;
+            var listY = oy + H - 160;
+
+            p.noStroke();
+            p.fill(60);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(12);
+            p.text('Top 5 Stray Dog States', listX, listY);
+
+            p.textSize(11);
+            top5.forEach(function(s, i) {
+                p.fill(80);
+                p.text((i + 1) + '. ' + s.name, listX, listY + 18 + i * 16);
+                p.fill(130);
+                p.textAlign(p.RIGHT, p.TOP);
+                p.text(s.intakes, ox + W, listY + 18 + i * 16);
+                p.textAlign(p.LEFT, p.TOP);
+            });
         }
     };
 
