@@ -372,6 +372,7 @@
                 window.VizHeatmap.draw(p, manager, ai, progress);
                 return;
             }
+            
         }
     };
 

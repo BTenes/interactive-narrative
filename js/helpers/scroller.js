@@ -52,6 +52,17 @@
                 self.onActive(sectionIndex);
             }
 
+            if (sectionIndex >= 8) {
+               
+                if (self.lastFiredIndex !== sectionIndex) {
+                    self.lastFiredIndex = sectionIndex;
+                    self.onProgress(sectionIndex, 1.0);
+                }
+                return; 
+            }
+
+            self.lastFiredIndex = sectionIndex;
+
             // Compute progress (0..1) through the current section.
             // For center trigger: progress travels 0→1 as the section's center
             // moves through ±40% of the viewport height around the viewport center.
