@@ -33,8 +33,8 @@
             var contentTop = 245;
 
             // Left photo card
-            var photoX = left;
-            var photoY = contentTop;
+            var photoX = left + 20;
+            var photoY = contentTop + 50;
             var photoW = 380;
             var photoH = 280;
 
@@ -46,7 +46,7 @@
             // Dropdown area
             var dropdownW = 280;
             var dropdownX = radarX - dropdownW / 2;
-            var dropdownY = 150;
+            var dropdownY = 180;
 
             // ---------- Dropdown ----------
             if (!manager.radarSelect) {
@@ -107,7 +107,7 @@
             p.fill(80);
             p.textAlign(p.CENTER, p.CENTER);
             p.textSize(12);
-            p.text("Select a breed:", radarX, dropdownY - 20);
+            p.text("Select a breed:", radarX - 190, dropdownY - 75);
 
             // ---------- Breed info ----------
             p.fill(30);
@@ -166,13 +166,6 @@
                 p.text("No photo available", photoX + photoW / 2, photoY + photoH / 2);
                 p.pop();
             }
-
-            // Photo caption
-            p.noStroke();
-            p.fill(130);
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(11);
-            p.text(d.akcBreed + " photo", photoX, photoY + photoH + 10);
 
             // ---------- Radar chart ----------
             var pointData = [];
@@ -286,9 +279,11 @@
             // ---------- Helpers ----------
             function findBreedPhotoURL(manager, d) {
                 if (!manager.breedPhotoMap) {
-                    return null;
+                    manager.breedPhotoMap = {};
                 }
-
+            
+                manager.breedPhotoMap["great pyrenees"] = "img/Great Pyrenees.webp";
+            
                 var manualMap = {
                     "pit bull": "american staffordshire terrier",
                     "german shepherd": "german shepherd dog",

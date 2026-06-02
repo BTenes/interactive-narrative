@@ -22,7 +22,7 @@
 
             var left = manager.offsetX || 80;
             var top = 55;
-            var w = manager.width || 600;
+            var w = (manager.width || 600) - 80;
             var h = (manager.height || 520) - 130;
 
             var maxY = getMaxY(data);
