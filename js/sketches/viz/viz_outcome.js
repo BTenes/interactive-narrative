@@ -8,6 +8,8 @@
 
             p.push();
 
+            p.textFont('Georgia');
+
             if (!data || data.length === 0) {
                 p.noStroke();
                 p.fill(80);
@@ -28,7 +30,7 @@
                 total += data[i].count;
             }
 
-            var cx = left + w * 0.33;
+            var cx = left + w * 0.24;
             var cy = top + h * 0.52;
             var outerR = Math.min(w * 0.34, h * 0.42);
             var innerR = outerR * 0.58;
@@ -118,7 +120,7 @@
             p.text(total.toLocaleString(), cx, cy + 12);
 
             // legend
-            var legendX = left + w * 0.68;
+            var legendX = left + w * 0.58;
             var legendY = top + 105;
             var rowH = 42;
 
@@ -155,7 +157,7 @@
             p.textSize(14);
             p.text(
                 "Not every shelter dog leaves through adoption. Choosing adoption gives a dog a real chance to find a home.",
-                left,
+                left - outerR * 0.3,
                 top + h + 25
             );
 

@@ -31,10 +31,10 @@
             }
 
             // Image display box
-            var boxX = 260;
-            var boxY = 80;
-            var boxW = 460;
-            var boxH = 360;
+            var boxX = 200;
+            var boxY = 50;
+            var boxW = 600;
+            var boxH = 420;
 
             // Keep original image ratio, no distortion
             var imgRatio = manager.introImg.width / manager.introImg.height;

@@ -8,6 +8,8 @@
 
             p.push();
 
+            p.textFont('Georgia');
+
             if (!data || data.length === 0) {
                 p.noStroke();
                 p.fill(80);

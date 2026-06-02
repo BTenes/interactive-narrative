@@ -8,6 +8,8 @@
 
             p.push();
 
+            p.textFont('Georgia');
+
             if (!data || data.length === 0) {
                 p.noStroke();
                 p.fill(80);
@@ -19,9 +21,9 @@
             }
 
             // Leave enough space for long breed names
-            var left = 260;
+            var left = 245;
             var top = 80;
-            var chartW = (manager.width || 600) * 0.58;
+            var chartW = (manager.width || 600) * 0.48;
             var chartH = (manager.height || 520) - 180;
 
             var maxValue = 0;

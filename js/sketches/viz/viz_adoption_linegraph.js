@@ -9,6 +9,8 @@
 
             p.push();
 
+            p.textFont('Georgia');
+
             // If data is not loaded yet
             if (!data || data.length === 0) {
                 p.noStroke();

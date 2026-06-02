@@ -63,6 +63,10 @@
 
             loadData();
 
+            p.push();
+
+            p.textFont('Georgia');
+
             var ox = manager.offsetX || 0;
             var oy = manager.offsetY || 0;
             var W  = manager.width   || 600;
