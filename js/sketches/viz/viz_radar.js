@@ -35,14 +35,14 @@
             var contentTop = 245;
 
             // Left photo card
-            var photoX = left;
+            var photoX = left + 90;
             var photoY = contentTop + 50;
             var photoW = 350;
             var photoH = 260;
 
             // Right radar area
             var radarRadius = 125;
-            var radarX = photoX + photoW + 80;
+            var radarX = photoX + photoW + 100;
             var radarY = contentTop + radarRadius - 20;
 
             // Dropdown area
