@@ -89,6 +89,10 @@
             p.textSize(22);
             p.text('Where are the Stray Dogs?', ox, oy + 8);
 
+            p.fill(110);                  
+            p.textSize(13);              
+            p.text('2024 State Level Data', ox, oy + 38);
+
             // find max for color scale
             var maxVal = 0;
             Object.values(csvData).forEach(function (d) {
