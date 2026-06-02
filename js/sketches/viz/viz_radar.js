@@ -45,7 +45,7 @@
 
             // Dropdown area
             var dropdownW = 280;
-            var dropdownX = radarX - dropdownW / 2;
+            var dropdownX = radarX - dropdownW / 2 + 60;
             var dropdownY = 180;
 
             // ---------- Dropdown ----------
@@ -107,7 +107,7 @@
             p.fill(80);
             p.textAlign(p.CENTER, p.CENTER);
             p.textSize(12);
-            p.text("Select a breed:", radarX - 190, dropdownY - 75);
+            p.text("Select a breed:", radarX - 130, dropdownY - 75);
 
             // ---------- Breed info ----------
             p.fill(30);

@@ -306,11 +306,15 @@
         draw: function (p, manager, ai, progress) {
 
             // Hide radar dropdown and photo when not on radar section
-            if (ai !== 6) {
+            // Set the actual radar section index
+            var RADAR_INDEX = 5;
+
+            // Hide radar dropdown and photo when not on radar section
+            if (ai !== RADAR_INDEX || progress > 0.95) {
                 if (manager.radarSelect) {
                     manager.radarSelect.hide();
                 }
-
+            
                 if (manager.breedPhotoEl) {
                     manager.breedPhotoEl.hide();
                 }
@@ -340,24 +344,34 @@
                 return;
             }
 
-            // Section 5: adoption heatmap
+            // Section 4: breed intake vs adoption
             if (ai === 4) {
-                window.VizHeatmap.draw(p, manager, ai, progress);
-                return;
-            }
-
-            // Section 6: breed intake vs adoption
-            if (ai === 5) {
                 window.VizBreed.draw(p, manager, ai, progress);
                 return;
             }
 
-            // Section 7: breed radar chart
+            // Section 5: breed radar chart
+            // Section 5: breed radar chart
+            if (ai === 5) {
+                if (progress <= 0.95) {
+                    window.VizRadar.draw(p, manager, ai, progress);
+                } else {
+                    if (manager.radarSelect) {
+                        manager.radarSelect.hide();
+                    }
+
+        if (manager.breedPhotoEl) {
+            manager.breedPhotoEl.hide();
+        }
+    }
+    return;
+}
+
+            // Section 6: adoption heatmap
             if (ai === 6) {
-                window.VizRadar.draw(p, manager, ai, progress);
+                window.VizHeatmap.draw(p, manager, ai, progress);
                 return;
             }
-            // If no visualization is assigned, leave blank.
         }
     };
 
