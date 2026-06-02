@@ -160,16 +160,6 @@
             p.text("Number of Adoptions", 0, 0);
             p.pop();
 
-            // callout text
-            p.noStroke();
-            p.fill(60);
-            p.textAlign(p.LEFT, p.CENTER);
-            p.textSize(14);
-            p.text(
-                "This heatmap helps reveal seasonal patterns in adoption activity. Lower-activity periods may be times when shelters need more community attention and support.",
-                left,
-                top + chartH + 62
-            );
 
             // tooltip
             if (hovered) {

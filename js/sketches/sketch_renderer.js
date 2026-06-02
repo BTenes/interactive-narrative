@@ -328,15 +328,15 @@
                 return;
             }
 
-            // Section 3: intake vs adoption timeline
+            // Section 2: outcome breakdown
             if (ai === 2) {
-                window.VizBar.draw(p, manager, ai, progress);
+                window.VizOutcome.draw(p, manager, ai, progress);
                 return;
             }
 
-            // Section 4: outcome breakdown
+            // Section 3: intake vs adoption timeline
             if (ai === 3) {
-                window.VizOutcome.draw(p, manager, ai, progress);
+                window.VizBar.draw(p, manager, ai, progress);
                 return;
             }
 

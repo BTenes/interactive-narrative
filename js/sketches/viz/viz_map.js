@@ -187,6 +187,8 @@
 
             geoData.forEach(function (feature) {
                 var fips = String(feature.id).padStart(2, '0');
+                if (fips === '02') return; // Alaska drawn separately
+                if (fips === '15') return; // Hawaii drawn separately
                 var name = fipsToName[fips];
                 var info = name && csvData[name];
                 var rescues = info ? info.intakes : 0;
@@ -231,9 +233,10 @@
                 var ag = Math.round(p.lerp(230, 94,  t3));
                 var ab = Math.round(p.lerp(201, 32,  t3));
 
+                var akHovered = (hoveredName === 'Alaska');
                 p.fill(ar, ag, ab);
-                p.stroke(255);
-                p.strokeWeight(0.8);
+                p.stroke(akHovered ? p.color(40, 40, 40) : 255);
+                p.strokeWeight(akHovered ? 2.5 : 0.8);
 
                 var akGeom = akFeature.geometry;
                 var akPolys = akGeom.type === 'Polygon'
@@ -257,6 +260,33 @@
                 });
             }
 
+            // draw Hawaii separately
+            var hiFeature = geoData.find(function(f) {
+                return String(f.id).padStart(2,'0') === '15';
+            });
+            if (hiFeature && csvData['Hawaii']) {
+                var hiInfo2 = csvData['Hawaii'];
+                var t4 = hiInfo2.intakes / maxVal;
+                var hr = Math.round(p.lerp(200, 27, t4));
+                var hg = Math.round(p.lerp(230, 94, t4));
+                var hb = Math.round(p.lerp(201, 32, t4));
+                var hiHovered = (hoveredName === 'Hawaii');
+                p.fill(hr, hg, hb);
+                p.stroke(hiHovered ? p.color(40,40,40) : 255);
+                p.strokeWeight(hiHovered ? 2.5 : 0.8);
+                var hiGeom2 = hiFeature.geometry;
+                var hiPolys2 = hiGeom2.type === 'Polygon' ? [hiGeom2.coordinates] : hiGeom2.coordinates;
+                hiPolys2.forEach(function(poly) {
+                    poly.forEach(function(ring) {
+                        p.beginShape();
+                        ring.forEach(function(coord) {
+                            var pt = projectCoord(coord[0], coord[1], '15');
+                            p.vertex(pt[0], pt[1]);
+                        });
+                        p.endShape(p.CLOSE);
+                    });
+                });
+            }
 
             // draw tooltip
             if (hoveredName && csvData[hoveredName]) {
@@ -397,11 +427,11 @@
              // Hawaii label directly on island
             var hiInfo = csvData['Hawaii'];
             if (hiInfo) {
-                var hiCoord = projectCoord(-156.5, 20.5, '15');
+                var hiCoord = projectCoord(-155.5, 19.6, '15');
                 p.noStroke();
                 p.fill(255);
                 p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(11);
+                p.textSize(10);
                 p.text('HI', hiCoord[0], hiCoord[1]);
             }
 

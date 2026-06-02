@@ -20,7 +20,7 @@
 
             // Leave enough space for long breed names
             var left = 260;
-            var top = 105;
+            var top = 80;
             var chartW = (manager.width || 600) * 0.58;
             var chartH = (manager.height || 520) - 180;
 
@@ -47,14 +47,6 @@
 
             p.fill(80);
             p.textSize(14);
-            drawWrappedText(
-                p,
-                "Some breeds enter shelters more often than others. Comparing intake and adoption helps show which breeds may need more visibility.",
-                left,
-                76,
-                chartW + 220,
-                18
-            );
 
             // grid and x labels
             var gridCount = 5;
@@ -159,19 +151,18 @@
 
                 var boxW = 230;
                 var boxH = 125;
-                var tx = p.mouseX + 16;
-                var ty = p.mouseY - 20;
 
-                if (tx + boxW > p.width - 10) {
-                    tx = p.mouseX - boxW - 16;
+                // tooltip stays on the right side, but follows mouse vertically
+                var tx = legendX - 150;
+                var ty = p.mouseY - boxH / 2 + 70;
+
+                // keep tooltip inside canvas vertically
+                if (ty < top) {
+                    ty = top;
                 }
 
-                if (ty + boxH > p.height - 10) {
-                    ty = p.mouseY - boxH - 16;
-                }
-
-                if (ty < 10) {
-                    ty = 10;
+                if (ty + boxH > top + chartH) {
+                    ty = top + chartH - boxH;
                 }
 
                 p.fill(255);
