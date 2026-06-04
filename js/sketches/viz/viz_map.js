@@ -136,6 +136,33 @@
                 return project(lon, lat);
             }
 
+             // top 5 states by stray dogs
+            var stateList = Object.keys(csvData).map(function(name) {
+                return { name: name, intakes: csvData[name].intakes };
+            });
+            stateList.sort(function(a, b) { return b.intakes - a.intakes; });
+            var top5 = stateList.slice(0, 5);
+
+            var listX = ox + W - 160;
+            var listY = oy + H - 160;
+
+            p.noStroke();
+            p.fill(60);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(12);
+            p.text('Top 5 Stray Dog States', listX, listY);
+
+            p.textSize(11);
+            top5.forEach(function(s, i) {
+                p.fill(80);
+                p.text((i + 1) + '. ' + s.name, listX, listY + 18 + i * 16);
+                p.fill(130);
+                p.textAlign(p.RIGHT, p.TOP);
+                p.text(s.intakes, ox + W, listY + 18 + i * 16);
+                p.textAlign(p.LEFT, p.TOP);
+            });
+
+
             // hover tooltip using p5 text
             geoData.forEach(function (feature) {
                 var fips = String(feature.id).padStart(2, '0');
@@ -212,11 +239,21 @@
                 var polys = geom.type === 'Polygon'
                     ? [geom.coordinates]
                     : geom.coordinates;
+                
 
+                // check if this state is in top 5
+                var isTop5 = top5.some(function(s) { return s.name === name; });
                 var isHovered = (name === hoveredName);
-                p.stroke(isHovered ? p.color(40, 40, 40) : 255);
-                p.strokeWeight(isHovered ? 2.5 : 0.8);
-                p.fill(isHovered ? p.color(r, g, bv, 255) : p.color(r, g, bv, 210));
+                if (isTop5) {
+                    p.stroke(isHovered ? p.color(40, 40, 40) : 255);
+                    p.strokeWeight(isHovered ? 2.5 : 0.8);
+                    p.fill(isHovered ? p.color(r, g, bv, 255) : p.color(r, g, bv, 220));
+                } else {
+                    p.stroke(180);
+                    p.strokeWeight(0.8);
+                    p.fill(220, 220, 215, 180);
+                }
+
 
                 polys.forEach(function (poly) {
                     poly.forEach(function (ring) {
@@ -241,10 +278,17 @@
                 var ag = Math.round(p.lerp(230, 94,  t3));
                 var ab = Math.round(p.lerp(201, 32,  t3));
 
+                var akIsTop5 = top5.some(function(s) { return s.name === 'Alaska'; });
                 var akHovered = (hoveredName === 'Alaska');
-                p.fill(ar, ag, ab);
-                p.stroke(akHovered ? p.color(40, 40, 40) : 255);
-                p.strokeWeight(akHovered ? 2.5 : 0.8);
+                if (akIsTop5) {
+                    p.fill(ar, ag, ab);
+                    p.stroke(akHovered ? p.color(40, 40, 40) : 255);
+                    p.strokeWeight(akHovered ? 2.5 : 0.8);
+                } else {
+                    p.fill(220, 220, 215, 180);
+                    p.stroke(180);
+                    p.strokeWeight(0.8);
+                }
 
                 var akGeom = akFeature.geometry;
                 var akPolys = akGeom.type === 'Polygon'
@@ -338,32 +382,6 @@
             p.text('Fewer', ox + W - 160, oy + H - 18);
             p.textAlign(p.RIGHT, p.TOP);
             p.text('More', ox + W, oy + H - 18);
-
-             // top 5 states by stray dogs
-            var stateList = Object.keys(csvData).map(function(name) {
-                return { name: name, intakes: csvData[name].intakes };
-            });
-            stateList.sort(function(a, b) { return b.intakes - a.intakes; });
-            var top5 = stateList.slice(0, 5);
-
-            var listX = ox + W - 160;
-            var listY = oy + H - 160;
-
-            p.noStroke();
-            p.fill(60);
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(12);
-            p.text('Top 5 Stray Dog States', listX, listY);
-
-            p.textSize(11);
-            top5.forEach(function(s, i) {
-                p.fill(80);
-                p.text((i + 1) + '. ' + s.name, listX, listY + 18 + i * 16);
-                p.fill(130);
-                p.textAlign(p.RIGHT, p.TOP);
-                p.text(s.intakes, ox + W, listY + 18 + i * 16);
-                p.textAlign(p.LEFT, p.TOP);
-            });
 
             // abbreviations for top 5 states on map
             var abbrMap = {
