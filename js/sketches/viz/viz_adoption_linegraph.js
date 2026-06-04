@@ -145,6 +145,31 @@
             p.text("Number of Dogs", 0, 0);
             p.pop();
 
+            // pandemic reference line at 2020
+            var pandemic2020 = null;
+            for (var pi = 0; pi < data.length; pi++) {
+                if (data[pi].year === 2020) { pandemic2020 = pi; break; }
+            }
+            if (pandemic2020 !== null) {
+                var px = xScale(pandemic2020);
+
+                // dashed vertical line
+                p.stroke(180, 100, 100);
+                p.strokeWeight(1.2);
+                p.drawingContext.setLineDash([6, 4]);
+                p.line(px, top, px, top + h);
+                p.drawingContext.setLineDash([]);
+
+                // label
+                p.noStroke();
+                p.fill(180, 100, 100);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(11);
+                p.text('COVID-19', px, top - 4);
+                p.textSize(10);
+                p.text('pandemic', px, top + 8);
+            }
+
             // hover tooltip
             if (
                 p.mouseX >= left &&
