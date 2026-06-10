@@ -35,7 +35,9 @@
 
             var rowH = chartH / data.length;
             var barH = rowH * 0.28;
-            var arrowWeight = 1.8;
+            var arrowWeight = 2.8;
+            var shelterLineWeight = 1.8;
+            var shelterEdgeGap = shelterLineWeight / 2 + 1;
             var intakeColor = [70, 130, 220];
             var adoptionColor = [80, 165, 120];
             var shelterX = left + chartW * 0.50;
@@ -99,15 +101,12 @@
             p.textSize(12);
             p.text("Shelter", shelterX, top - 12);
 
-            // bars
+            // hover background
             var hovered = null;
 
             for (var r = 0; r < data.length; r++) {
                 var item = data[r];
-
                 var y = top + r * rowH + rowH / 2;
-                var intakeW = p.map(item.intake, 0, maxValue, 0, halfW);
-                var adoptionW = p.map(item.adoption, 0, maxValue, 0, halfW);
                 var isHovered = (
                     p.mouseX >= chartLeft - 225 &&
                     p.mouseX <= chartRight &&
@@ -125,21 +124,35 @@
                     p.fill(226, 236, 248, 210);
                     p.rect(chartLeft - 225, y - rowH / 2 + 2, chartRight - chartLeft + 230, rowH - 4, 6);
                 }
+            }
+
+            p.stroke(120);
+            p.strokeWeight(shelterLineWeight);
+            p.line(shelterX, top - 6, shelterX, top + chartH);
+
+            // bars
+            for (var r2 = 0; r2 < data.length; r2++) {
+                var item2 = data[r2];
+
+                var y2 = top + r2 * rowH + rowH / 2;
+                var intakeW = p.map(item2.intake, 0, maxValue, 0, halfW);
+                var adoptionW = p.map(item2.adoption, 0, maxValue, 0, halfW);
+                var isHoveredRow = hovered && hovered.item === item2;
 
                 // breed label
                 p.noStroke();
-                p.fill(isHovered ? 20 : 45);
+                p.fill(isHoveredRow ? 20 : 45);
                 p.textAlign(p.RIGHT, p.CENTER);
                 p.textSize(12);
-                p.text(item.breed, chartLeft - 16, y);
+                p.text(item2.breed, chartLeft - 16, y2);
 
                 // intake arrow: dogs entering the shelter
                 drawArrowLine(
                     p,
                     shelterX - intakeW,
-                    y - barH / 2 - 3,
-                    shelterX,
-                    y - barH / 2 - 3,
+                    y2 - barH / 2 - 3,
+                    shelterX - shelterEdgeGap,
+                    y2 - barH / 2 - 3,
                     intakeColor,
                     arrowWeight
                 );
@@ -147,19 +160,15 @@
                 // adoption arrow: dogs leaving through adoption
                 drawArrowLine(
                     p,
-                    shelterX,
-                    y + barH / 2 + 3,
+                    shelterX + shelterEdgeGap,
+                    y2 + barH / 2 + 3,
                     shelterX + adoptionW,
-                    y + barH / 2 + 3,
+                    y2 + barH / 2 + 3,
                     adoptionColor,
                     arrowWeight
                 );
 
             }
-
-            p.stroke(120);
-            p.strokeWeight(1.8);
-            p.line(shelterX, top - 6, shelterX, top + chartH);
 
             // axis
             p.stroke(170);
@@ -238,7 +247,8 @@
 
             function drawArrowLine(p, x1, y1, x2, y2, color, weight) {
                 var angle = Math.atan2(y2 - y1, x2 - x1);
-                var headSize = 5;
+                var length = p.dist(x1, y1, x2, y2);
+                var headSize = Math.min(7, Math.max(2.5, length * 0.55));
                 var shaftEndX = x2 - Math.cos(angle) * headSize;
                 var shaftEndY = y2 - Math.sin(angle) * headSize;
 
