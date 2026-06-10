@@ -50,11 +50,11 @@
             p.fill(30);
             p.textAlign(p.LEFT, p.CENTER);
             p.textSize(22);
-            p.text("Dog Intake and Adoption by Breed", left, 28);
+            p.text("Dog Intake and Adoption by Breed", chartLeft, 28);
 
             p.fill(110);
             p.textSize(13);
-            p.text("Austin Animal Center, dogs only, top 12 breeds by intake, 2014 to 2024", left, 52);
+            p.text("Austin Animal Center, dogs only, top 12 breeds by intake, 2014 to 2024", chartLeft, 52);
 
             p.fill(80);
             p.textSize(14);

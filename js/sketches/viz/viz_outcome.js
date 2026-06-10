@@ -20,7 +20,7 @@
                 return;
             }
 
-            var left = manager.offsetX || 80;
+            var left = (manager.offsetX || 80) + 45;
             var top = 50;
             var w = manager.width || 600;
             var h = (manager.height || 520) - 90;
