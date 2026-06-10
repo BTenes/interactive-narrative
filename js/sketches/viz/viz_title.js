@@ -31,7 +31,7 @@
             }
 
             // Image display box
-            var boxX = 200;
+            var boxX = 100;
             var boxY = 50;
             var boxW = 600;
             var boxH = 420;
