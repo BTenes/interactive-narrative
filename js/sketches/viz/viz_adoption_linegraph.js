@@ -165,9 +165,9 @@
                 p.fill(180, 100, 100);
                 p.textAlign(p.CENTER, p.BOTTOM);
                 p.textSize(11);
-                p.text('COVID-19', px, top - 4);
+                p.text('COVID-19', px, top - 14);
                 p.textSize(10);
-                p.text('pandemic', px, top + 8);
+                p.text('pandemic', px, top - 2);
             }
 
             // hover tooltip

@@ -47,6 +47,17 @@
             }
             sectionIndex = Math.min(self.sectionPositions.length - 1, sectionIndex);
 
+            // Full-text sections should take over as soon as their top reaches
+            // the readable part of the viewport. Waiting for the center point
+            // can leave the final page visible but dimmed as the previous viz.
+            self.steps.forEach(function (el, i) {
+                if (!el.dataset || el.dataset.layout !== 'full-text') return;
+                var rect = el.getBoundingClientRect();
+                if (rect.top <= window.innerHeight * 0.35 && rect.bottom > 80) {
+                    sectionIndex = i;
+                }
+            });
+
             if (self.currentIndex !== sectionIndex) {
                 self.currentIndex = sectionIndex;
                 self.onActive(sectionIndex);

@@ -36,13 +36,26 @@
             var innerR = outerR * 0.58;
 
             var colors = [
-                [76, 132, 255],   // Adoption
-                [95, 191, 125],   // Return to Owner
+                [70, 130, 220],   // Adoption
+                [120, 112, 190],  // Return to Owner
                 [244, 180, 80],   // Transfer
                 [225, 99, 99],    // Euthanasia
-                [170, 120, 220],  // Rto-Adopt
+                [205, 90, 165],   // Rto-Adopt
                 [180, 180, 180]   // Other
             ];
+
+            // Draw order is separate from legend order. Keeping Adoption first
+            // anchors it on the right; placing small outcomes after it gives
+            // their labels room at the bottom of the donut.
+            var drawOrder = [0, 3, 4, 5, 2, 1];
+            var chartData = drawOrder.map(function (originalIndex) {
+                return {
+                    originalIndex: originalIndex,
+                    outcome: data[originalIndex].outcome,
+                    count: data[originalIndex].count,
+                    color: colors[originalIndex]
+                };
+            });
 
             // title
             p.noStroke();
@@ -61,7 +74,8 @@
 
             // find hovered slice
             var hovered = -1;
-            var startAngle = -p.HALF_PI;
+            var chartStartAngle = -p.HALF_PI;
+            var startAngle = chartStartAngle;
 
             if (isMouseInsideDonut(p, cx, cy, innerR, outerR)) {
                 var mouseAngle = Math.atan2(p.mouseY - cy, p.mouseX - cx);
@@ -69,12 +83,12 @@
 
                 var runningAngle = normalizeAngle(startAngle);
 
-                for (var j = 0; j < data.length; j++) {
-                    var sliceAngle = (data[j].count / total) * p.TWO_PI;
+                for (var j = 0; j < chartData.length; j++) {
+                    var sliceAngle = (chartData[j].count / total) * p.TWO_PI;
                     var endAngle = runningAngle + sliceAngle;
 
                     if (angleBetween(mouseAngle, runningAngle, endAngle)) {
-                        hovered = j;
+                        hovered = chartData[j].originalIndex;
                         break;
                     }
 
@@ -83,22 +97,22 @@
             }
 
             // draw donut slices
-            startAngle = -p.HALF_PI;
+            startAngle = chartStartAngle;
 
-            for (var k = 0; k < data.length; k++) {
-                var angleSize = (data[k].count / total) * p.TWO_PI;
+            for (var k = 0; k < chartData.length; k++) {
+                var angleSize = (chartData[k].count / total) * p.TWO_PI;
                 var end = startAngle + angleSize;
                 var mid = (startAngle + end) / 2;
 
                 var offset = 0;
-                if (hovered === k) {
+                if (hovered === chartData[k].originalIndex) {
                     offset = 10;
                 }
 
                 var dx = Math.cos(mid) * offset;
                 var dy = Math.sin(mid) * offset;
 
-                p.fill(colors[k][0], colors[k][1], colors[k][2]);
+                p.fill(chartData[k].color[0], chartData[k].color[1], chartData[k].color[2]);
                 p.noStroke();
                 p.arc(cx + dx, cy + dy, outerR * 2, outerR * 2, startAngle, end, p.PIE);
 
@@ -119,6 +133,58 @@
             p.textSize(26);
             p.text(total.toLocaleString(), cx, cy + 12);
 
+            // slice percentages
+            startAngle = chartStartAngle;
+            p.textStyle(p.BOLD);
+            var smallLabelCount = 0;
+
+            for (var n = 0; n < chartData.length; n++) {
+                var labelAngleSize = (chartData[n].count / total) * p.TWO_PI;
+                var labelEnd = startAngle + labelAngleSize;
+                var labelMid = (startAngle + labelEnd) / 2;
+                var pctOnSlice = ((chartData[n].count / total) * 100).toFixed(1) + "%";
+                var labelR = (outerR + innerR) / 2;
+                var labelX = cx + Math.cos(labelMid) * labelR;
+                var labelY = cy + Math.sin(labelMid) * labelR;
+
+                p.noStroke();
+                p.textAlign(p.CENTER, p.CENTER);
+
+                if (labelAngleSize > 0.16) {
+                    p.fill(255);
+                    p.textSize(15);
+                    p.text(pctOnSlice, labelX, labelY);
+                } else {
+                    var anchorX = cx + Math.cos(labelMid) * (outerR + 13);
+                    var anchorY = cy + Math.sin(labelMid) * (outerR + 13);
+                    var outerLabelX = anchorX + (1 - smallLabelCount) * 20;
+                    var outerLabelY = cy + outerR + 34;
+
+                    if (chartData[n].outcome === "Euthanasia") {
+                        outerLabelX -= 12;
+                    }
+
+                    p.stroke(chartData[n].color[0], chartData[n].color[1], chartData[n].color[2]);
+                    p.strokeWeight(1);
+                    p.line(
+                        cx + Math.cos(labelMid) * (outerR - 2),
+                        cy + Math.sin(labelMid) * (outerR - 2),
+                        anchorX,
+                        anchorY
+                    );
+
+                    p.noStroke();
+                    p.fill(chartData[n].color[0], chartData[n].color[1], chartData[n].color[2]);
+                    p.textSize(10);
+                    p.text(pctOnSlice, outerLabelX, outerLabelY);
+                    smallLabelCount++;
+                }
+
+                startAngle = labelEnd;
+            }
+
+            p.textStyle(p.NORMAL);
+
             // legend
             var legendX = left + w * 0.58;
             var legendY = top + 105;
@@ -128,12 +194,11 @@
 
             for (var m = 0; m < data.length; m++) {
                 var y = legendY + m * rowH;
-                var pct = ((data[m].count / total) * 100).toFixed(1);
 
                 if (hovered === m) {
                     p.fill(245);
                     p.noStroke();
-                    p.rect(legendX - 10, y - 17, 260, 34, 8);
+                    p.rect(legendX - 10, y - 17, 190, 34, 8);
                 }
 
                 p.fill(colors[m][0], colors[m][1], colors[m][2]);
@@ -143,23 +208,7 @@
                 p.fill(40);
                 p.textSize(14);
                 p.text(data[m].outcome, legendX + 30, y);
-
-                p.fill(90);
-                p.textAlign(p.RIGHT, p.CENTER);
-                p.text(data[m].count.toLocaleString() + "  (" + pct + "%)", legendX + 235, y);
-                p.textAlign(p.LEFT, p.CENTER);
             }
-
-            // call-to-action text
-            p.noStroke();
-            p.fill(60);
-            p.textAlign(p.LEFT, p.CENTER);
-            p.textSize(14);
-            p.text(
-                "Not every shelter dog leaves through adoption. Choosing adoption gives a dog a real chance to find a home.",
-                left - outerR * 0.3,
-                top + h + 25
-            );
 
             // tooltip
             if (hovered !== -1) {

@@ -40,15 +40,14 @@
             var photoW = 350;
             var photoH = 260;
 
-            // Right radar area
-            var radarRadius = 125;
-            var radarX = photoX + photoW + 70;
-            var radarY = contentTop + radarRadius - 20;
-
-            // Dropdown area
+            // Right-side controls and radar share one column.
             var dropdownW = 280;
-            var dropdownX = radarX - dropdownW / 2 + 60;
-            var dropdownY = 180;
+            var dropdownX = Math.min(p.width - dropdownW - 24, photoX + photoW + 86);
+            var dropdownY = 198;
+
+            var radarRadius = 122;
+            var radarX = dropdownX + dropdownW / 2;
+            var radarY = contentTop + radarRadius - 10;
 
             // ---------- Dropdown ----------
             if (!manager.radarSelect) {
@@ -72,7 +71,26 @@
                 manager.radarSelect = sel;
             }
 
+            if (!manager.radarSelectLabel) {
+                manager.radarSelectLabel = p.createDiv("Select a breed:");
+                manager.radarSelectLabel.parent("vis");
+                manager.radarSelectLabel.style("position", "absolute");
+                manager.radarSelectLabel.style("font-family", "Georgia, 'Times New Roman', Times, serif");
+                manager.radarSelectLabel.style("font-size", "16px");
+                manager.radarSelectLabel.style("font-weight", "700");
+                manager.radarSelectLabel.style("line-height", "1.2");
+                manager.radarSelectLabel.style("color", "#555");
+                manager.radarSelectLabel.style("text-align", "left");
+                manager.radarSelectLabel.style("z-index", "20");
+                manager.radarSelectLabel.style("pointer-events", "none");
+            }
+
+            manager.radarSelectLabel.show();
+            manager.radarSelectLabel.style("width", dropdownW + "px");
+            manager.radarSelectLabel.position(dropdownX, dropdownY - 28);
+
             manager.radarSelect.show();
+            manager.radarSelect.style("width", dropdownW + "px");
             manager.radarSelect.position(dropdownX, dropdownY);
 
             var idx = Number(manager.radarSelect.value());
@@ -104,12 +122,6 @@
             p.fill(80);
             p.textSize(13);
             p.text("Explore care needs and personality-related traits before choosing a dog.", left, introY);
-
-            // ---------- Dropdown label ----------
-            p.fill(80);
-            p.textAlign(p.CENTER, p.CENTER);
-            p.textSize(12);
-            p.text("Select a breed:", radarX - 130, dropdownY - 75);
 
             // ---------- Breed info ----------
             p.fill(30);
@@ -205,13 +217,13 @@
 
                 p.noStroke();
                 p.fill(70);
-                p.textSize(12);
+                p.textSize(13);
                 p.textAlign(p.CENTER, p.CENTER);
 
                 p.text(
                     traits[a].label,
-                    Math.cos(angle) * (radarRadius + 34),
-                    Math.sin(angle) * (radarRadius + 34)
+                    Math.cos(angle) * (radarRadius + 44),
+                    Math.sin(angle) * (radarRadius + 44)
                 );
             }
 

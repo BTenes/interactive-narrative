@@ -21,10 +21,10 @@
             }
 
             // Leave enough space for long breed names
-            var left = 245;
-            var top = 80;
-            var chartW = (manager.width || 600) * 0.48;
-            var chartH = (manager.height || 520) - 180;
+            var left = 205;
+            var top = 112;
+            var chartW = (manager.width || 600) * 0.68;
+            var chartH = (manager.height || 520) - 210;
 
             var maxValue = 0;
             for (var i = 0; i < data.length; i++) {
@@ -35,6 +35,13 @@
 
             var rowH = chartH / data.length;
             var barH = rowH * 0.28;
+            var arrowWeight = 1.8;
+            var intakeColor = [70, 130, 220];
+            var adoptionColor = [80, 165, 120];
+            var shelterX = left + chartW * 0.50;
+            var halfW = chartW * 0.43;
+            var chartLeft = shelterX - halfW;
+            var chartRight = shelterX + halfW;
 
             // title
             p.noStroke();
@@ -50,23 +57,47 @@
             p.fill(80);
             p.textSize(14);
 
-            // grid and x labels
-            var gridCount = 5;
+            // grid and x labels. The shelter is the shared zero point:
+            // intake flows into it from the left, adoption flows out to the right.
+            var gridCount = 3;
 
             for (var g = 0; g <= gridCount; g++) {
                 var value = (maxValue / gridCount) * g;
-                var x = left + p.map(value, 0, maxValue, 0, chartW);
+                var dx = p.map(value, 0, maxValue, 0, halfW);
+                var leftGridX = shelterX - dx;
+                var rightGridX = shelterX + dx;
 
                 p.stroke(230);
                 p.strokeWeight(1);
-                p.line(x, top, x, top + chartH);
+                p.line(leftGridX, top, leftGridX, top + chartH);
+                if (g > 0) {
+                    p.line(rightGridX, top, rightGridX, top + chartH);
+                }
 
                 p.noStroke();
                 p.fill(120);
                 p.textAlign(p.CENTER, p.TOP);
                 p.textSize(11);
-                p.text(Math.round(value), x, top + chartH + 8);
+                if (g === 0) {
+                    p.text("0", shelterX, top + chartH + 8);
+                } else {
+                    p.text(Math.round(value), leftGridX, top + chartH + 8);
+                    p.text(Math.round(value), rightGridX, top + chartH + 8);
+                }
             }
+
+            p.noStroke();
+            p.fill(110);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.textSize(11);
+            p.text("entering shelter", shelterX - halfW / 2, top - 12);
+            p.text("leaving by adoption", shelterX + halfW / 2, top - 12);
+
+            p.noStroke();
+            p.fill(80);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.textSize(12);
+            p.text("Shelter", shelterX, top - 12);
 
             // bars
             var hovered = null;
@@ -75,90 +106,102 @@
                 var item = data[r];
 
                 var y = top + r * rowH + rowH / 2;
-                var intakeW = p.map(item.intake, 0, maxValue, 0, chartW);
-                var adoptionW = p.map(item.adoption, 0, maxValue, 0, chartW);
-
-                // breed label
-                p.noStroke();
-                p.fill(45);
-                p.textAlign(p.RIGHT, p.CENTER);
-                p.textSize(12);
-                p.text(item.breed, left - 16, y);
-
-                // intake bar
-                p.fill(70, 130, 220, 210);
-                p.rect(left, y - barH - 3, intakeW, barH, 4);
-
-                // adoption bar
-                p.fill(80, 165, 120, 210);
-                p.rect(left, y + 3, adoptionW, barH, 4);
-
-                // hover area
-                if (
-                    p.mouseX >= left - 225 &&
-                    p.mouseX <= left + chartW &&
+                var intakeW = p.map(item.intake, 0, maxValue, 0, halfW);
+                var adoptionW = p.map(item.adoption, 0, maxValue, 0, halfW);
+                var isHovered = (
+                    p.mouseX >= chartLeft - 225 &&
+                    p.mouseX <= chartRight &&
                     p.mouseY >= y - rowH / 2 &&
                     p.mouseY <= y + rowH / 2
-                ) {
+                );
+
+                if (isHovered) {
                     hovered = {
                         item: item,
                         y: y
                     };
 
-                    p.noFill();
-                    p.stroke(80);
-                    p.strokeWeight(1.5);
-                    p.rect(left - 225, y - rowH / 2 + 2, chartW + 230, rowH - 4, 6);
+                    p.noStroke();
+                    p.fill(226, 236, 248, 210);
+                    p.rect(chartLeft - 225, y - rowH / 2 + 2, chartRight - chartLeft + 230, rowH - 4, 6);
                 }
+
+                // breed label
+                p.noStroke();
+                p.fill(isHovered ? 20 : 45);
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.textSize(12);
+                p.text(item.breed, chartLeft - 16, y);
+
+                // intake arrow: dogs entering the shelter
+                drawArrowLine(
+                    p,
+                    shelterX - intakeW,
+                    y - barH / 2 - 3,
+                    shelterX,
+                    y - barH / 2 - 3,
+                    intakeColor,
+                    arrowWeight
+                );
+
+                // adoption arrow: dogs leaving through adoption
+                drawArrowLine(
+                    p,
+                    shelterX,
+                    y + barH / 2 + 3,
+                    shelterX + adoptionW,
+                    y + barH / 2 + 3,
+                    adoptionColor,
+                    arrowWeight
+                );
+
             }
+
+            p.stroke(120);
+            p.strokeWeight(1.8);
+            p.line(shelterX, top - 6, shelterX, top + chartH);
 
             // axis
             p.stroke(170);
             p.strokeWeight(1);
-            p.line(left, top, left, top + chartH);
-            p.line(left, top + chartH, left + chartW, top + chartH);
+            p.line(chartLeft, top + chartH, chartRight, top + chartH);
 
             // x-axis label
             p.noStroke();
             p.fill(90);
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(13);
-            p.text("Number of Dogs", left + chartW / 2, top + chartH + 35);
+            p.text("Number of Dogs", shelterX, top + chartH + 35);
 
             // legend
-            var legendX = left + chartW + 35;
+            var legendX = chartRight + 18;
             var legendY = top + 25;
 
             p.noStroke();
 
             // intake legend
-            p.fill(70, 130, 220, 210);
-            p.rect(legendX, legendY, 18, 18, 4);
+            drawArrowLine(p, legendX, legendY + 9, legendX + 34, legendY + 9, intakeColor, arrowWeight);
 
             p.fill(50);
             p.textAlign(p.LEFT, p.CENTER);
             p.textSize(13);
-            p.text("Intake", legendX + 28, legendY + 9);
+            p.text("Intake in", legendX + 45, legendY + 9);
 
             // adoption legend
-            p.fill(80, 165, 120, 210);
-            p.rect(legendX, legendY + 34, 18, 18, 4);
+            drawArrowLine(p, legendX, legendY + 43, legendX + 34, legendY + 43, adoptionColor, arrowWeight);
 
             p.fill(50);
-            p.text("Adoption", legendX + 28, legendY + 43);
+            p.text("Adoption out", legendX + 45, legendY + 43);
 
             // tooltip
             if (hovered) {
                 var d = hovered.item;
 
-                var boxW = 230;
-                var boxH = 125;
+                var boxW = 205;
+                var boxH = 116;
+                var tx = Math.min(chartRight + 20, p.width - boxW - 12);
+                var ty = hovered.y - boxH / 2;
 
-                // tooltip stays on the right side, but follows mouse vertically
-                var tx = legendX - 150;
-                var ty = p.mouseY - boxH / 2 + 70;
-
-                // keep tooltip inside canvas vertically
                 if (ty < top) {
                     ty = top;
                 }
@@ -170,49 +213,51 @@
                 p.fill(255);
                 p.stroke(210);
                 p.strokeWeight(1);
-                p.rect(tx, ty, boxW, boxH, 10);
+                p.rect(tx, ty, boxW, boxH, 8);
 
                 p.noStroke();
                 p.textAlign(p.LEFT, p.TOP);
 
                 p.fill(30);
-                p.textSize(15);
+                p.textSize(14);
                 p.text(d.breed, tx + 14, ty + 12);
 
-                p.fill(70, 130, 220);
-                p.textSize(13);
-                p.text("Intake: " + d.intake.toLocaleString(), tx + 14, ty + 42);
+                p.fill(intakeColor[0], intakeColor[1], intakeColor[2]);
+                p.textSize(12);
+                p.text("Intake: " + d.intake.toLocaleString(), tx + 14, ty + 38);
 
-                p.fill(80, 165, 120);
-                p.text("Adoption: " + d.adoption.toLocaleString(), tx + 14, ty + 64);
+                p.fill(adoptionColor[0], adoptionColor[1], adoptionColor[2]);
+                p.text("Adoption: " + d.adoption.toLocaleString(), tx + 14, ty + 58);
 
                 p.fill(70);
-                p.text("Gap: " + d.gap.toLocaleString(), tx + 14, ty + 86);
-                p.text("Adoption rate: " + Math.round(d.adoptionRate * 100) + "%", tx + 14, ty + 108);
+                p.text("Gap: " + d.gap.toLocaleString(), tx + 14, ty + 78);
+                p.text("Adoption rate: " + Math.round(d.adoptionRate * 100) + "%", tx + 14, ty + 98);
             }
 
             p.pop();
 
+            function drawArrowLine(p, x1, y1, x2, y2, color, weight) {
+                var angle = Math.atan2(y2 - y1, x2 - x1);
+                var headSize = 5;
+                var shaftEndX = x2 - Math.cos(angle) * headSize;
+                var shaftEndY = y2 - Math.sin(angle) * headSize;
 
-            function drawWrappedText(p, str, x, y, maxWidth, lineHeight) {
-                var words = str.split(" ");
-                var line = "";
-                var currentY = y;
+                p.stroke(color[0], color[1], color[2], 210);
+                p.strokeWeight(weight);
+                p.strokeCap(p.ROUND);
+                p.line(x1, y1, shaftEndX, shaftEndY);
+                p.strokeCap(p.SQUARE);
 
-                for (var i = 0; i < words.length; i++) {
-                    var testLine = line + words[i] + " ";
-                    var testWidth = p.textWidth(testLine);
-
-                    if (testWidth > maxWidth && i > 0) {
-                        p.text(line, x, currentY);
-                        line = words[i] + " ";
-                        currentY += lineHeight;
-                    } else {
-                        line = testLine;
-                    }
-                }
-
-                p.text(line, x, currentY);
+                p.noStroke();
+                p.fill(color[0], color[1], color[2], 220);
+                p.triangle(
+                    x2,
+                    y2,
+                    x2 - Math.cos(angle - 0.55) * headSize,
+                    y2 - Math.sin(angle - 0.55) * headSize,
+                    x2 - Math.cos(angle + 0.55) * headSize,
+                    y2 - Math.sin(angle + 0.55) * headSize
+                );
             }
         }
     };

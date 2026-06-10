@@ -299,7 +299,10 @@
                 loadBreedData,
                 loadRadarData,
                 loadBreedPhotoData
-            ]);
+            ]).then(function (results) {
+                preloadRadarBreedPhotos(manager);
+                return results;
+            });
         },
 
 
@@ -313,6 +316,10 @@
             if (ai !== RADAR_INDEX || progress > 0.95) {
                 if (manager.radarSelect) {
                     manager.radarSelect.hide();
+                }
+
+                if (manager.radarSelectLabel) {
+                    manager.radarSelectLabel.hide();
                 }
             
                 if (manager.breedPhotoEl) {
@@ -351,7 +358,6 @@
             }
 
             // Section 5: breed radar chart
-            // Section 5: breed radar chart
             if (ai === 5) {
                 if (progress <= 0.95) {
                     window.VizRadar.draw(p, manager, ai, progress);
@@ -360,12 +366,16 @@
                         manager.radarSelect.hide();
                     }
 
-        if (manager.breedPhotoEl) {
-            manager.breedPhotoEl.hide();
-        }
-    }
-    return;
-}
+                    if (manager.radarSelectLabel) {
+                        manager.radarSelectLabel.hide();
+                    }
+
+                    if (manager.breedPhotoEl) {
+                        manager.breedPhotoEl.hide();
+                    }
+                }
+                return;
+            }
 
             // Section 6: adoption heatmap
             if (ai === 6) {
@@ -428,6 +438,50 @@
         }
 
         return rows;
+    }
+
+
+    function preloadRadarBreedPhotos(manager) {
+        var data = manager.radarData || [];
+        var photoMap = manager.breedPhotoMap || {};
+        var manualMap = {
+            "pit bull": "american staffordshire terrier",
+            "german shepherd": "german shepherd dog",
+            "jack russell terrier": "russell terrier",
+            "staffordshire": "american staffordshire terrier"
+        };
+
+        photoMap["great pyrenees"] = "img/Great Pyrenees.webp";
+        manager.breedPhotoMap = photoMap;
+        manager.preloadedBreedPhotos = manager.preloadedBreedPhotos || {};
+
+        data.forEach(function (d) {
+            var candidates = [];
+
+            if (d.akcBreed) {
+                candidates.push(d.akcBreed.trim().toLowerCase());
+            }
+
+            if (d.shelterBreed) {
+                var shelterKey = d.shelterBreed.trim().toLowerCase();
+                candidates.push(shelterKey);
+
+                if (manualMap[shelterKey]) {
+                    candidates.push(manualMap[shelterKey]);
+                }
+            }
+
+            for (var i = 0; i < candidates.length; i++) {
+                var url = photoMap[candidates[i]];
+
+                if (url && !manager.preloadedBreedPhotos[url]) {
+                    var img = new Image();
+                    img.src = url;
+                    manager.preloadedBreedPhotos[url] = img;
+                    break;
+                }
+            }
+        });
     }
 
 })();
