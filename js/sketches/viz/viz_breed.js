@@ -194,13 +194,13 @@
             p.fill(50);
             p.textAlign(p.LEFT, p.CENTER);
             p.textSize(13);
-            p.text("Intake in", legendX + 45, legendY + 9);
+            p.text("Intake", legendX + 45, legendY + 9);
 
             // adoption legend
             drawArrowLine(p, legendX, legendY + 43, legendX + 34, legendY + 43, adoptionColor, arrowWeight);
 
             p.fill(50);
-            p.text("Adoption out", legendX + 45, legendY + 43);
+            p.text("Adoption", legendX + 45, legendY + 43);
 
             // tooltip
             if (hovered) {
